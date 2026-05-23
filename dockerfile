@@ -1,15 +1,24 @@
-FROM php:8.2-fpm
+FROM php:8.2-apache
 
-WORKDIR /var/www
-
+# Installer extensions nécessaires
 RUN apt-get update && apt-get install -y \
-    zip unzip curl libpng-dev libonig-dev libxml2-dev \
+    libpng-dev libjpeg-dev libfreetype6-dev zip unzip git curl \
     && docker-php-ext-install pdo pdo_mysql
 
-COPY . .
+# Activer mod rewrite (important pour Laravel)
+RUN a2enmod rewrite
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Copier le projet
+COPY . /var/www/html
 
-RUN composer install --no-dev --optimize-autoloader
+# Donner les droits
+RUN chown -R www-data:www-data /var/www/html
 
-CMD php artisan serve --host=0.0.0.0 --port=10000
+WORKDIR /var/www/html
+
+# Installer composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+RUN composer install
+
+EXPOSE 80
