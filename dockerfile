@@ -44,7 +44,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
 # ==============================
-# 8. FIX LARAVEL STORAGE & CACHE PATHS (IMPORTANT)
+# 8. FIX LARAVEL STORAGE & CACHE PATHS
 # ==============================
 RUN mkdir -p \
     storage/framework/cache \
@@ -53,17 +53,18 @@ RUN mkdir -p \
     bootstrap/cache
 
 # ==============================
-# 9. PERMISSIONS (CRITICAL ON RENDER)
+# 9. PERMISSIONS
 # ==============================
-RUN chmod -R 775 storage bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
 # ==============================
-# 10. LARAVEL OPTIMIZATION
+# 10. LARAVEL OPTIMIZATION (déplacé vers entrypoint)
 # ==============================
-RUN php artisan config:clear || true
-RUN php artisan cache:clear || true
-RUN php artisan view:clear || true
-RUN php artisan config:cache || true
+# RUN php artisan config:clear || true
+# RUN php artisan cache:clear || true
+# RUN php artisan view:clear || true
+# RUN php artisan config:cache || true
 
 # ==============================
 # 11. APACHE CONFIG (POINT TO PUBLIC FOLDER)
@@ -74,11 +75,14 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # ==============================
-# 12. EXPOSE PORT (RENDER USES 10000)
+# 12. EXPOSE PORT
 # ==============================
 EXPOSE 10000
 
 # ==============================
-# 13. START APACHE
+# 13. ENTRYPOINT
 # ==============================
-CMD ["apache2-foreground"]
+COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+CMD ["/usr/local/bin/entrypoint.sh"]
