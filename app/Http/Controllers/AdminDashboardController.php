@@ -1832,9 +1832,10 @@ $monthlyActivity = Grade::selectRaw('EXTRACT(MONTH FROM created_at)::int as mont
 
         // ✅ Niveaux filtrés par institution
         $totalNiveaux = Niveau::where('institution_id', $instId)
-            ->withCount(['classes' => fn ($q) => $q->where('institution_id', $instId)])
-            ->having('classes_count', '>', 0)
-            ->count();
+    ->whereHas('classes', function ($q) use ($instId) {
+        $q->where('institution_id', $instId);
+    })
+    ->count();
 
         $apprenantsSansClasse = Apprenant::where('institution_id', $instId)->whereNull('class_id')->count();
         $tauxAffectation      = $totalApprenants > 0 ? round(($totalApprenants - $apprenantsSansClasse) / $totalApprenants * 100, 1) : 0;
