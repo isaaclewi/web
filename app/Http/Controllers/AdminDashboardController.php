@@ -73,11 +73,19 @@ class AdminDashboardController extends Controller
             ->get();
 
         /* ================= ACTIVITÉ MENSUELLE ================= */
-        $monthlyActivity = Grade::selectRaw('MONTH(created_at) as month, COUNT(*) as total')
-            ->whereHas('evaluation.subject', fn ($q) => $q->where('institution_id', $instId))
-            ->whereYear('created_at', now()->year)
-            ->groupBy('month')
-            ->pluck('total', 'month');
+        // $monthlyActivity = Grade::selectRaw('MONTH(created_at) as month, COUNT(*) as total')
+        //     ->whereHas('evaluation.subject', fn ($q) => $q->where('institution_id', $instId))
+        //     ->whereYear('created_at', now()->year)
+        //     ->groupBy('month')
+        //     ->pluck('total', 'month');
+
+
+            /* ================= ACTIVITÉ MENSUELLE ================= */
+$monthlyActivity = Grade::selectRaw('EXTRACT(MONTH FROM created_at)::int as month, COUNT(*) as total')
+    ->whereHas('evaluation.subject', fn ($q) => $q->where('institution_id', $instId))
+    ->whereYear('created_at', now()->year)
+    ->groupByRaw('EXTRACT(MONTH FROM created_at)::int')
+    ->pluck('total', 'month');
 
         $months = [];
         $vals   = [];
