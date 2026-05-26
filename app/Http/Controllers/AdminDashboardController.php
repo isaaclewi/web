@@ -477,13 +477,12 @@ $monthlyActivity = Grade::selectRaw('EXTRACT(MONTH FROM created_at)::int as mont
         'logo'              => 'nullable|image|max:2048', // max 2MB
     ]);
 
-     if ($request->hasFile('logo')) {
-
+    if ($request->hasFile('logo')) {
+        // Supprimer l'ancien logo
         if ($institution->logo) {
-            Storage::disk('public')->delete($institution->logo);
+            Storage::disk('root_storage')->delete($institution->logo);
         }
-
-        $data['logo'] = $request->file('logo')->store('logos/institutions', 'public');
+        $data['logo'] = $request->file('logo')->store('logos/institutions', 'root_storage');
     }
 
     $data['autorisation_etat'] = (bool) $request->input('autorisation_etat', 0);
@@ -1644,8 +1643,29 @@ $monthlyActivity = Grade::selectRaw('EXTRACT(MONTH FROM created_at)::int as mont
         if ($statut)   { $query->whereHas('financialRecords', fn ($q) => $q->where('annee_academique', $annee)->where('statut', $statut)); }
 
         $apprenants      = $query->orderBy('nom')->paginate(25)->withQueryString();
-        $statsAnnee      = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)->selectRaw('COALESCE(SUM(montant_du),0) as total_du, COALESCE(SUM(montant_paye),0) as total_paye, COALESCE(SUM(montant_reste),0) as total_reste, COUNT(CASE WHEN statut="paye" THEN 1 END) as nb_payes, COUNT(CASE WHEN statut="partiel" THEN 1 END) as nb_partiels, COUNT(CASE WHEN statut="impaye" THEN 1 END) as nb_impayes')->first();
-        $statsMois       = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)->selectRaw('mois, mois_label, SUM(montant_du) as du, SUM(montant_paye) as paye')->groupBy('mois', 'mois_label')->orderBy('mois')->get();
+       $statsAnnee = Financialrecord::where('institution_id', $instId)
+    ->where('annee_academique', $annee)
+    ->selectRaw("
+        COALESCE(SUM(montant_du),0) as total_du,
+        COALESCE(SUM(montant_paye),0) as total_paye,
+        COALESCE(SUM(montant_reste),0) as total_reste,
+
+        COUNT(CASE WHEN statut = 'paye' THEN 1 END) as nb_payes,
+        COUNT(CASE WHEN statut = 'partiel' THEN 1 END) as nb_partiels,
+        COUNT(CASE WHEN statut = 'impaye' THEN 1 END) as nb_impayes
+    ")
+    ->first();
+       $statsMois = Financialrecord::where('institution_id', $instId)
+    ->where('annee_academique', $annee)
+    ->selectRaw("
+        mois,
+        mois_label,
+        COALESCE(SUM(montant_du),0) as du,
+        COALESCE(SUM(montant_paye),0) as paye
+    ")
+    ->groupBy('mois', 'mois_label')
+    ->orderBy('mois')
+    ->get();
         $recentPaiements = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)->whereNotNull('date_paiement')->with(['apprenant', 'recordedBy'])->orderByDesc('date_paiement')->limit(10)->get();
         $anneesDispos    = Financialrecord::where('institution_id', $instId)->distinct()->pluck('annee_academique')->sort()->values();
         if (! $anneesDispos->contains($annee)) { $anneesDispos->prepend($annee); }
@@ -1748,7 +1768,23 @@ $monthlyActivity = Grade::selectRaw('EXTRACT(MONTH FROM created_at)::int as mont
         return response()->stream(function () use ($records) {
             $h = fopen('php://output', 'w');
             fprintf($h, chr(0xEF).chr(0xBB).chr(0xBF));
-            fputcsv($h, ['Matricule', 'Nom', 'Prénom', 'Classe', 'Mois', 'Année', 'Dû (FCFA)', 'Payé (FCFA)', 'Reste (FCFA)', 'Statut', 'Date paiement', 'Mode', 'Référence', 'Enregistré par', 'Validé par']);
+            fputcsv($h, [
+    $r->apprenant->matricule ?? '',
+    $r->apprenant->nom ?? '',
+    $r->apprenant->prenom ?? '',
+    $r->apprenant->classe->name ?? '',
+    $r->mois_label,
+    $r->annee_academique,
+    $r->montant_du,
+    $r->montant_paye,
+    $r->montant_reste,
+    $r->statut,
+    $r->date_paiement?->format('d/m/Y') ?? '',
+    $r->mode_paiement ?? '',
+    $r->reference ?? '',
+    $r->recordedBy?->name ?? '',
+    $r->validatedBy?->name ?? ''
+]);
             foreach ($records as $r) {
                 fputcsv($h, [$r->apprenant->matricule ?? '', $r->apprenant->nom ?? '', $r->apprenant->prenom ?? '', $r->apprenant->classe->name ?? '', $r->mois_label, $r->annee_academique, $r->montant_du, $r->montant_paye, $r->montant_reste, $r->statut_label, $r->date_paiement?->format('d/m/Y') ?? '', $r->mode_paiement ?? '', $r->reference ?? '', $r->recordedBy?->name ?? '', $r->validatedBy?->name ?? '']);
             }
