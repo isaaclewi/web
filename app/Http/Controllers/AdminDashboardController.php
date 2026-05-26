@@ -1839,34 +1839,67 @@ $monthlyActivity = Grade::selectRaw('EXTRACT(MONTH FROM created_at)::int as mont
         $apprenantsSansClasse = Apprenant::where('institution_id', $instId)->whereNull('class_id')->count();
         $tauxAffectation      = $totalApprenants > 0 ? round(($totalApprenants - $apprenantsSansClasse) / $totalApprenants * 100, 1) : 0;
 
-        $finStats = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)
-            ->selectRaw('COALESCE(SUM(montant_du),0) as total_du, COALESCE(SUM(montant_paye),0) as total_paye, COALESCE(SUM(montant_reste),0) as total_reste, COUNT(CASE WHEN statut="paye" THEN 1 END) as nb_payes, COUNT(CASE WHEN statut="partiel" THEN 1 END) as nb_partiels, COUNT(CASE WHEN statut="impaye" THEN 1 END) as nb_impayes, COUNT(*) as nb_total')
-            ->first();
+       $finStats = Financialrecord::where('institution_id', $instId)
+    ->where('annee_academique', $annee)
+    ->selectRaw("
+        COALESCE(SUM(montant_du),0) as total_du,
+        COALESCE(SUM(montant_paye),0) as total_paye,
+        COALESCE(SUM(montant_reste),0) as total_reste,
 
-        $finMensuel = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)
-            ->selectRaw('mois, mois_label, SUM(montant_du) as du, SUM(montant_paye) as paye, SUM(montant_reste) as reste')
-            ->groupBy('mois', 'mois_label')->orderBy('mois')->get();
+        COUNT(CASE WHEN statut = 'paye' THEN 1 END) as nb_payes,
+        COUNT(CASE WHEN statut = 'partiel' THEN 1 END) as nb_partiels,
+        COUNT(CASE WHEN statut = 'impaye' THEN 1 END) as nb_impayes,
+
+        COUNT(*) as nb_total
+    ")
+    ->first();
+
+        $finMensuel = Financialrecord::where('institution_id', $instId)
+    ->where('annee_academique', $annee)
+    ->selectRaw("
+        mois,
+        mois_label,
+        SUM(montant_du) as du,
+        SUM(montant_paye) as paye,
+        SUM(montant_reste) as reste
+    ")
+    ->groupBy('mois', 'mois_label')
+    ->orderBy('mois')
+    ->get();
 
         $topDebiteurs = Apprenant::where('apprenants.institution_id', $instId)
-            ->join('financial_records', 'apprenants.id', '=', 'financial_records.apprenant_id')
-            ->where('financial_records.annee_academique', $annee)
-            ->where('financial_records.statut', '!=', 'paye')
-            ->select('apprenants.id', 'apprenants.nom', 'apprenants.prenom', 'apprenants.class_id', DB::raw('SUM(financial_records.montant_reste) as total_reste'))
-            ->groupBy('apprenants.id', 'apprenants.nom', 'apprenants.prenom', 'apprenants.class_id')
-            ->orderByDesc('total_reste')->with('classe:id,name')->limit(5)->get();
+    ->join('financial_records', 'apprenants.id', '=', 'financial_records.apprenant_id')
+    ->where('financial_records.annee_academique', $annee)
+    ->where('financial_records.statut', '!=', 'paye')
+    ->select(
+        'apprenants.id',
+        'apprenants.nom',
+        'apprenants.prenom',
+        'apprenants.class_id',
+        DB::raw('SUM(financial_records.montant_reste) as total_reste')
+    )
+    ->groupBy('apprenants.id', 'apprenants.nom', 'apprenants.prenom', 'apprenants.class_id')
+    ->orderByDesc('total_reste')
+    ->with('classe:id,name')
+    ->limit(5)
+    ->get();
 
         $totalStaff  = \App\Models\Staff::where('institution_id', $instId)->count();
         $actifsStaff = \App\Models\Staff::where('institution_id', $instId)->where('status', 1)->count();
         $staffByUnit = DB::table('staff')
-            ->join('administrative_units', 'staff.administrative_unit_id', '=', 'administrative_units.id')
-            ->where('staff.institution_id', $instId)
-            ->select('administrative_units.name as unite', DB::raw('COUNT(*) as total'))
-            ->groupBy('administrative_units.id', 'administrative_units.name')->orderByDesc('total')->get();
+    ->join('administrative_units', 'staff.administrative_unit_id', '=', 'administrative_units.id')
+    ->where('staff.institution_id', $instId)
+    ->select('administrative_units.name as unite', DB::raw('COUNT(*) as total'))
+    ->groupBy('administrative_units.id', 'administrative_units.name')
+    ->orderByDesc('total')
+    ->get();
 
         $totalParents = DB::table('apprenant_parent')
-            ->join('apprenants', 'apprenant_parent.apprenant_id', '=', 'apprenants.id')
-            ->where('apprenants.institution_id', $instId)
-            ->distinct('apprenant_parent.parent_id')->count('apprenant_parent.parent_id');
+    ->join('apprenants', 'apprenant_parent.apprenant_id', '=', 'apprenants.id')
+    ->where('apprenants.institution_id', $instId)
+    ->distinct()
+    ->count('apprenant_parent.parent_id');
+
         $apprenantsSansParent    = Apprenant::where('institution_id', $instId)->whereDoesntHave('parents')->count();
         $tauxCouvertureParents   = $totalApprenants > 0 ? round(($totalApprenants - $apprenantsSansParent) / $totalApprenants * 100, 1) : 0;
 
