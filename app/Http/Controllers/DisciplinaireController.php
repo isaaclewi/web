@@ -60,18 +60,18 @@ class DisciplinaireController extends Controller
 
         // Stats
         $stats = SuiviDisciplinaire::where('institution_id', $instId)
-            ->where('annee_civile', $annee)
-            ->selectRaw('
-                COUNT(*) as total,
-                COUNT(CASE WHEN gravite = 1 THEN 1 END) as mineurs,
-                COUNT(CASE WHEN gravite = 2 THEN 1 END) as moderes,
-                COUNT(CASE WHEN gravite = 3 THEN 1 END) as graves,
-                COUNT(CASE WHEN statut  = "ouvert"   THEN 1 END) as ouverts,
-                COUNT(CASE WHEN statut  = "en_suivi" THEN 1 END) as en_suivi,
-                COUNT(CASE WHEN statut  = "clos"     THEN 1 END) as clos,
-                COUNT(CASE WHEN parents_notifies = 1 THEN 1 END) as notifies
-            ')
-            ->first();
+    ->where('annee_civile', $annee)
+    ->selectRaw("
+        COUNT(*) as total,
+        COUNT(CASE WHEN gravite = 1 THEN 1 END) as mineurs,
+        COUNT(CASE WHEN gravite = 2 THEN 1 END) as moderes,
+        COUNT(CASE WHEN gravite = 3 THEN 1 END) as graves,
+        COUNT(CASE WHEN statut = 'ouvert' THEN 1 END) as ouverts,
+        COUNT(CASE WHEN statut = 'en_suivi' THEN 1 END) as en_suivi,
+        COUNT(CASE WHEN statut = 'clos' THEN 1 END) as clos,
+        COUNT(CASE WHEN parents_notifies = true THEN 1 END) as notifies
+    ")
+    ->first();
 
         // Par type
         $parType = SuiviDisciplinaire::where('institution_id', $instId)
