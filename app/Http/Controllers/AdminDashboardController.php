@@ -470,12 +470,13 @@ $monthlyActivity = Grade::selectRaw('EXTRACT(MONTH FROM created_at)::int as mont
     $data = $request->validate([/* ... */]);
 
     if ($request->hasFile('logo')) {
-        // Supprimer l'ancien logo
-        if ($institution->logo) {
-            Storage::disk('root_storage')->delete($institution->logo);
-        }
-        $data['logo'] = $request->file('logo')->store('logos/institutions', 'root_storage');
+
+    if ($institution->logo) {
+        Storage::disk('public')->delete($institution->logo);
     }
+
+    $data['logo'] = $request->file('logo')->store('logos/institutions', 'public');
+}
 
     $data['autorisation_etat'] = (bool) $request->input('autorisation_etat', 0);
     unset($data['code']);

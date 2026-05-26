@@ -804,9 +804,8 @@
         <div class="sidebar-logo">
             <div class="sidebar-logo-mark">
                 @if (isset($institution) && $institution?->logo)
-                    <img src="{{ $institution->logo ? asset('storage/' . $institution->logo) : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }}"
-     alt="Logo"
-     style="width:32px;height:32px;object-fit:cover;border-radius:8px;">
+                    <img src="{{ asset('storage/' . $institution->logo) }}" alt="Logo"
+                        style="width:32px;height:32px;object-fit:cover;border-radius:8px;">
                 @else
                     <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Logo"
                         style="width:18px;height:18px;filter:invert(1);">
