@@ -59,9 +59,21 @@ class PlanningController extends Controller
             $edtQuery->where('jour', $jour);
         }
 
-        $emploisDuTemps = $edtQuery->orderByRaw("FIELD(jour,'lundi','mardi','mercredi','jeudi','vendredi','samedi')")
-            ->orderBy('heure_debut')
-            ->get();
+        $emploisDuTemps = $edtQuery
+    ->orderByRaw("
+        CASE jour
+            WHEN 'lundi' THEN 1
+            WHEN 'mardi' THEN 2
+            WHEN 'mercredi' THEN 3
+            WHEN 'jeudi' THEN 4
+            WHEN 'vendredi' THEN 5
+            WHEN 'samedi' THEN 6
+            ELSE 7
+        END
+    ")
+    ->orderBy('heure_debut')
+    ->get();
+
 
         // Organiser par jour pour la grille
         $grille = [];
@@ -106,7 +118,7 @@ class PlanningController extends Controller
         $classes = Classe::where('institution_id', $instId)->orderBy('name')->get();
         $teachers = Teacher::where('institution_id', $instId)->orderBy('nom')->get();
         $subjects = Subject::where('institution_id', $instId)->orderBy('name')->get();
-        $niveaux = Niveau::orderBy('name')->get();
+        $niveaux = Niveau::where('institution_id', $instId)->orderBy('name')->get();
         $filieres = Filiere::where('institution_id', $instId)->orderBy('name')->get();
 
         $jourLabels = EmploiDuTemps::jourLabels();
@@ -415,14 +427,14 @@ class PlanningController extends Controller
         $user        = Auth::user() ?? redirect()->route('login')->send();
         $institution = $user->institution;
         $teacher     = $user->teacher;
- 
+
         if (! $teacher) {
             abort(403, 'Aucun profil enseignant lié à votre compte.');
         }
- 
+
         $instId = $institution->id;
         $annee  = $institution->academic_year ?? date('Y').'-'.(date('Y') + 1);
- 
+
         // ── Emploi du temps de l'enseignant ──────────────────
         $emplois = EmploiDuTemps::where('institution_id', $instId)
             ->where('annee_academique', $annee)
@@ -430,31 +442,31 @@ class PlanningController extends Controller
             ->where('teacher_id', $teacher->id)       // ← uniquement SES cours
             ->with(['classe', 'subject', 'teacher'])
             ->get();
- 
+
         // Organiser par jour pour la grille (même structure que admin)
         $grille = [];
         foreach (EmploiDuTemps::jourLabels() as $j => $jLabel) {
             $grille[$j] = $emplois->where('jour', $j)->values();
         }
- 
+
         $jourLabels  = EmploiDuTemps::jourLabels();
         $typeLabels  = EmploiDuTemps::typeLabels();
         $typeColors  = EmploiDuTemps::typeColors();
- 
+
         $teacher->load(['classes', 'niveaux', 'filieres']);
- 
+
         return view('teacher.Planning', compact(
             'user', 'institution', 'teacher', 'annee',
             'emplois', 'grille',
             'jourLabels', 'typeLabels', 'typeColors',
         ));
     }
- 
+
     /* ─── PLANNING PARENT (lecture seule, emplois des enfants) ─── */
     public function parentPlanning(Request $request)
     {
         $user = Auth::user() ?? redirect()->route('login')->send();
- 
+
         $schoolParent = \App\Models\SchoolParent::where('user_id', $user->id)
             ->with([
                 'apprenants',
@@ -464,18 +476,18 @@ class PlanningController extends Controller
                 'apprenants.institution',
             ])
             ->first();
- 
+
         if (! $schoolParent) {
             abort(403, 'Aucun profil parent lié à votre compte.');
         }
- 
+
         // L'institution vient du premier enfant (ou de l'user)
         $institution = $user->institution
             ?? $schoolParent->apprenants->first()?->institution;
- 
+
         $typeLabels = EmploiDuTemps::typeLabels();
         $annee      = $institution?->academic_year ?? date('Y').'-'.(date('Y') + 1);
- 
+
         return view('parent.Planning', compact(
             'user', 'institution', 'schoolParent',
             'typeLabels', 'annee',
