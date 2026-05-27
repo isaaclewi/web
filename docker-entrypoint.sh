@@ -3,16 +3,21 @@ set -e
 
 # Créer les dossiers nécessaires
 mkdir -p storage/framework/{cache,sessions,views} bootstrap/cache
+mkdir -p storage/app/public/logos/institutions
 
 # Donner les droits à www-data
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 
-# === TEST PHP ARTISAN ===
-echo "=== TEST PHP ARTISAN ==="
+# === LARAVEL SETUP ===
+echo "=== LARAVEL SETUP ==="
 php artisan config:clear 2>&1
 php artisan config:cache 2>&1
 php artisan view:clear 2>&1
+
+# ✅ SYMLINK CRITIQUE : public/storage -> storage/app/public
+echo "=== STORAGE LINK ==="
+php artisan storage:link --force 2>&1
 
 # === TEST CONNEXION DB ===
 echo "=== TEST CONNEXION DB ==="
