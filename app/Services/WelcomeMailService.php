@@ -42,9 +42,9 @@ class WelcomeMailService
                 'ligne'  => $e->getFile().':'.$e->getLine(),
             ]);
 
-            if (config('app.debug')) {
-                throw $e;
-            }
+            // if (config('app.debug')) {
+            //     throw $e;
+            // }
         }
     }
 
