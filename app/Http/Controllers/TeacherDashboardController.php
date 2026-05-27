@@ -555,7 +555,7 @@ class TeacherDashboardController extends Controller
                 $avg = Grade::whereHas('evaluation', function ($q) use ($subjectIds, $classe, $month) {
                     $q->whereIn('subject_id', $subjectIds)
                         ->whereHas('subject', fn ($sq) => $sq->where('class_id', $classe->id))
-                        ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [$month]);
+                        ->whereRaw("TO_CHAR(date, 'YYYY-MM') = ?", [$month]);
                 })->avg('score');
                 $data[] = $avg ? round($avg, 1) : null;
             }
