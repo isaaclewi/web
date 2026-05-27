@@ -39,20 +39,24 @@ body::after{content:'';position:fixed;inset:0;z-index:9998;pointer-events:none;b
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.4)}50%{box-shadow:0 0 0 6px rgba(124,58,237,0)}}
 
 /* ── HEADER ── */
+/* ── HEADER ── */
 #header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between;transition:background .4s,border .4s,height .4s}
-#header.solid{height:56px;background:rgba(255,255,255,.96);backdrop-filter:blur(18px);border-bottom:1px solid var(--divider);box-shadow:var(--shadow-sm)}
+#header.solid{height:56px;background:rgba(10,11,20,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);box-shadow:0 1px 4px rgba(10,11,20,.06)}
 .logo-wrap{display:flex;align-items:center;gap:.55rem;flex-shrink:0}
 .logo-mark{width:32px;height:32px;background:var(--grad);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .logo-mark img{width:100%;height:100%;object-fit:cover}
-.logo-text{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
-.logo-text span{color:var(--purple)}
-#nav-menu{display:flex;align-items:center;gap:.1rem}
-#nav-menu li a{font-family:'Syne',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);padding:.45rem .75rem;border-radius:7px;transition:color .2s,background .2s;cursor:none}
-#nav-menu li a:hover{color:var(--purple);background:var(--purple-l)}
-.nav-cta{background:var(--grad)!important;color:#fff!important;border-radius:100px!important;padding:.45rem 1.2rem!important}
-.nav-cta:hover{transform:translateY(-2px)!important;box-shadow:0 8px 24px rgba(124,58,237,.4)!important}
+.logo-text{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;letter-spacing:-.01em;color:#fff}
+.logo-text span{color:#A78BFA}
+#nav-menu{display:flex;align-items:center;gap:.05rem}
+#nav-menu li a{font-family:'Syne',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.55);padding:.45rem .75rem;border-radius:8px;transition:color .2s,background .2s;cursor:none}
+#nav-menu li a:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-cta{background:linear-gradient(135deg,#7C3AED 0%,#2563EB 100%)!important;color:#fff!important;border-radius:100px!important;padding:.45rem 1.2rem!important;box-shadow:0 4px 16px rgba(124,58,237,.35)!important;transition:transform .15s,box-shadow .2s!important}
+.nav-cta:hover{transform:translateY(-2px)!important;box-shadow:0 8px 24px rgba(124,58,237,.5)!important}
 .burger{display:none;flex-direction:column;gap:5px;cursor:none;padding:.5rem;border:none;background:none}
-.burger span{width:22px;height:1.5px;background:var(--ink);border-radius:2px;transition:.3s}
+.burger span{width:22px;height:1.5px;background:#fff;border-radius:2px;transition:.3s}
+.burger.active span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.burger.active span:nth-child(2){opacity:0}
+.burger.active span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
 .burger.active span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
 .burger.active span:nth-child(2){opacity:0}
 .burger.active span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
@@ -196,10 +200,10 @@ footer{background:var(--ink);padding:5rem 4rem 2.5rem}
   .footer-top{grid-template-columns:1fr 1fr;gap:2.5rem}
 }
 @media(max-width:768px){
-  #nav-menu{display:none;flex-direction:column;align-items:flex-start;position:fixed;top:56px;left:0;right:0;background:#fff;padding:1.5rem 1.75rem 2rem;border-bottom:1px solid var(--divider);box-shadow:var(--shadow-md);gap:.2rem}
+ #nav-menu{display:none;flex-direction:column;align-items:flex-start;position:fixed;top:56px;left:0;right:0;background:#0A0B14;padding:1.5rem 1.75rem max(2rem,env(safe-area-inset-bottom));border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 16px 56px rgba(124,58,237,.15);gap:.2rem}
   #nav-menu.active{display:flex}
   #nav-menu li{width:100%}
-  #nav-menu li a{display:block;padding:.65rem .5rem}
+  #nav-menu li a{display:block;padding:.65rem .5rem;color:rgba(255,255,255,.6)}
   .burger{display:flex}
   .pillars-grid{grid-template-columns:1fr}
   .impact-grid{grid-template-columns:1fr 1fr}

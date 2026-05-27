@@ -43,13 +43,30 @@ body::after{content:'';position:fixed;inset:0;z-index:9998;pointer-events:none;
 background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
 opacity:.018}
 
+
 /* HEADER */
-#header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between;gap:1rem;background:rgba(255,255,255,.97);backdrop-filter:blur(18px);border-bottom:1px solid var(--divider);box-shadow:var(--shadow-sm)}
+#header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 2.5rem;height:62px;display:flex;align-items:center;justify-content:space-between;gap:1rem;transition:background .4s,border .4s,height .4s}
+#header.solid{height:56px;background:rgba(10,11,20,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);box-shadow:0 1px 4px rgba(10,11,20,.06)}
 .logo-wrap{display:flex;align-items:center;gap:.55rem;flex-shrink:0;cursor:none}
 .logo-mark{width:32px;height:32px;background:var(--grad);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .logo-mark img{width:100%;height:100%;object-fit:cover}
-.logo-text{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
-.logo-text span{color:var(--purple)}
+.logo-text{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;letter-spacing:-.01em;color:#fff}
+.logo-text span{color:#A78BFA}
+.header-nav{display:flex;align-items:center;gap:.05rem}
+.header-nav a{font-family:'Syne',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.55);padding:.45rem .75rem;border-radius:8px;transition:color .2s,background .2s;cursor:none;white-space:nowrap}
+.header-nav a:hover,.header-nav a.active{color:#fff;background:rgba(255,255,255,.06)}
+.header-cta{background:var(--grad)!important;color:#fff!important;border-radius:100px!important;padding:.45rem 1.1rem!important;box-shadow:0 4px 16px rgba(124,58,237,.35)!important;transition:transform .2s,box-shadow .2s!important}
+.header-cta:hover{transform:translateY(-2px)!important;box-shadow:0 8px 24px rgba(124,58,237,.5)!important}
+.burger{display:none;flex-direction:column;justify-content:center;gap:5px;width:38px;height:38px;padding:.5rem;cursor:none;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:transparent;flex-shrink:0}
+.burger span{display:block;width:18px;height:1.5px;background:#fff;border-radius:2px;transition:.3s ease;transform-origin:center}
+.burger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.burger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.burger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+.mobile-nav{position:fixed;top:62px;left:0;right:0;background:#0A0B14;backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 16px 56px rgba(10,11,20,.3);z-index:998;padding:1rem 1.5rem 1.5rem;flex-direction:column;gap:.2rem;display:none}
+.mobile-nav.open{display:flex}
+.mobile-nav a{font-family:'Syne',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.55);padding:.7rem .9rem;border-radius:10px;transition:color .18s,background .18s;display:block}
+.mobile-nav a:hover,.mobile-nav a.active{color:#fff;background:rgba(255,255,255,.06)}
+.mobile-nav .m-cta{background:var(--grad);color:#fff!important;border-radius:100px;text-align:center;margin-top:.6rem;padding:.75rem 1.25rem}
 
 /* Desktop nav */
 .header-nav{display:flex;align-items:center;gap:.25rem}
@@ -661,6 +678,9 @@ function assetUrl(path){
      Donc en JS on fait simplement : */
   return window.location.origin+'/'+path;
 }
+ window.addEventListener('scroll',()=>{
+  document.getElementById('header').classList.toggle('solid',scrollY>60);
+},{passive:true});
 </script>
 </body>
 </html>
