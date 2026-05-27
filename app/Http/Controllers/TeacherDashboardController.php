@@ -109,6 +109,43 @@ public function index()
     ));
 }
 
+private function buildChartDataPostgres($classes, $subjectIds)
+{
+    $months = collect(range(1, 6))->map(function ($i) {
+        return now()->subMonths(6 - $i)->format('Y-m');
+    });
+
+    $datasets = [];
+
+    foreach ($classes as $class) {
+
+        $data = [];
+
+        foreach ($months as $month) {
+
+            $avg = Grade::whereHas('evaluation', function ($q) use ($subjectIds, $class, $month) {
+                $q->whereIn('subject_id', $subjectIds)
+                  ->whereHas('subject', function ($sq) use ($class) {
+                      $sq->where('class_id', $class->id);
+                  })
+                  ->whereRaw("TO_CHAR(date, 'YYYY-MM') = ?", [$month]);
+            })->avg('score');
+
+            $data[] = $avg ? round($avg, 1) : null;
+        }
+
+        $datasets[] = [
+            'label' => $class->name,
+            'data' => $data,
+        ];
+    }
+
+    return [
+        'labels' => $months,
+        'datasets' => $datasets
+    ];
+}
+
     /* ═══════════════════════════════════════════════════════════
      |  2. CLASSES  →  teacher.classes.index   GET /teacher/classes
      ═══════════════════════════════════════════════════════════ */
