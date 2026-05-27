@@ -226,7 +226,7 @@ footer{background:var(--ink);padding:5rem 4rem 2.5rem}
 
 <header id="header">
   <div class="logo-wrap">
-    <div class="logo-mark"><img src="/medias/Syntriforg[1].png" alt="SyntriForge"></div>
+    <div class="logo-mark"><img src="/medias/Syntriforg[1].png" alt="SyntriForge" onerror="this.style.display='none';this.parentElement.innerHTML='🎓'"></div>
     <div class="logo-text">SyntriForg <span>Edu</span></div>
   </div>
   <button class="burger" id="burger"><span></span><span></span><span></span></button>

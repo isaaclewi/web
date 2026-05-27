@@ -260,7 +260,7 @@ h1.page-title .grad{background:var(--grad);-webkit-background-clip:text;-webkit-
 <!-- HEADER -->
 <header id="header">
   <a href="{{ route('home') }}" class="logo-wrap">
-    <div class="logo-mark"><img src="/medias/Syntriforg[1].png" alt="SyntriForge"></div>
+    <div class="logo-mark"><img src="/medias/Syntriforg[1].png" alt="SyntriForge" onerror="this.style.display='none';this.parentElement.innerHTML='🎓'"></div>
     <div class="logo-text">SyntriForg <span>Edu</span></div>
   </a>
 
