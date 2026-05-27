@@ -38,48 +38,76 @@ class TeacherDashboardController extends Controller
     /* ═══════════════════════════════════════════════════════════
      |  1. DASHBOARD  →  teacher.dashboard   GET /teacher/dashboard
      ═══════════════════════════════════════════════════════════ */
+public function index()
+{
+    $user = Auth::user();
+    $institution = $user->institution;
+    $teacher = $this->getTeacher();
 
-    public function index()
-    {
-        $user = Auth::user();
-        $institution = $user->institution;
-        $teacher = $this->getTeacher();
-
-        $subjects = Subject::where('teacher_id', $teacher->id)->with('classe')->get();
-        $classes = $teacher->classes()->with('apprenants')->get();
-        $classIds = $classes->pluck('id');
-        $niveaux = $teacher->niveaux;
-        $filieres = $teacher->filieres;
-        $subjectIds = $subjects->pluck('id');
-
-        $apprenants = Apprenant::whereIn('class_id', $classIds)->get();
-
-        $evaluations = Evaluation::whereIn('subject_id', $subjectIds)
-            ->with(['subject.classe', 'grades'])
-            ->orderByDesc('date')
-            ->get();
-
-        $avgGrade = Grade::whereHas('evaluation', fn ($q) => $q->whereIn('subject_id', $subjectIds))->avg('score');
-        $weeklyHours = $subjects->sum('coefficient') * 2;
-
-        $stats = [
-            'classes' => $classes->count(),
-            'subjects' => $subjects->count(),
-            'students' => $apprenants->count(),
-            'levels' => $niveaux->count(),
-            'average_grade' => $avgGrade ? round($avgGrade, 1) : '—',
-            'hours' => $weeklyHours ?: 0,
-        ];
-
-        $chartData = $this->buildChartData($classes, $subjectIds);
-        $gradeDistribution = $this->buildGradeDistribution($subjectIds);
-
-        return view('teacher.dashboard', compact(
-            'user', 'institution', 'teacher', 'classes', 'subjects',
-            'apprenants', 'niveaux', 'filieres', 'evaluations',
-            'stats', 'chartData', 'gradeDistribution'
-        ));
+    if (! $teacher) {
+        abort(403, 'Profil enseignant introuvable.');
     }
+
+    // ── Données de base ──
+    $subjects = Subject::where('teacher_id', $teacher->id)
+        ->with('classe')
+        ->get();
+
+    $classes = $teacher->classes()->with('apprenants')->get();
+    $classIds = $classes->pluck('id');
+    $subjectIds = $subjects->pluck('id');
+
+    $niveaux = $teacher->niveaux ?? collect();
+    $filieres = $teacher->filieres ?? collect();
+
+    $apprenants = Apprenant::whereIn('class_id', $classIds)->get();
+
+    // ── Evaluations ──
+    $evaluations = Evaluation::whereIn('subject_id', $subjectIds)
+        ->with(['subject.classe', 'grades'])
+        ->orderBy('date', 'desc')
+        ->get();
+
+    // ── Moyenne globale ──
+    $avgGrade = Grade::whereHas('evaluation', function ($q) use ($subjectIds, $classIds) {
+        $q->whereIn('subject_id', $subjectIds)
+          ->whereHas('subject', function ($sq) use ($classIds) {
+              $sq->whereIn('class_id', $classIds);
+          });
+    })->avg('score');
+
+    // ── Heures hebdo ──
+    $weeklyHours = $subjects->sum('coefficient') * 2;
+
+    // ── Stats ──
+    $stats = [
+        'classes' => $classes->count(),
+        'subjects' => $subjects->count(),
+        'students' => $apprenants->count(),
+        'levels' => $niveaux->count(),
+        'average_grade' => $avgGrade ? round($avgGrade, 1) : '—',
+        'hours' => $weeklyHours ?: 0,
+    ];
+
+    // ── GRAPHIQUES (IMPORTANT POSTGRES SAFE) ──
+    $chartData = $this->buildChartDataPostgres($classes, $subjectIds);
+    $gradeDistribution = $this->buildGradeDistributionPostgres($subjectIds);
+
+    return view('teacher.dashboard', compact(
+        'user',
+        'institution',
+        'teacher',
+        'classes',
+        'subjects',
+        'apprenants',
+        'niveaux',
+        'filieres',
+        'evaluations',
+        'stats',
+        'chartData',
+        'gradeDistribution'
+    ));
+}
 
     /* ═══════════════════════════════════════════════════════════
      |  2. CLASSES  →  teacher.classes.index   GET /teacher/classes
@@ -282,7 +310,7 @@ class TeacherDashboardController extends Controller
      public function evaluationStore(Request $request)
     {
         $teacher = $this->getTeacher();
- 
+
         $v = Validator::make($request->all(), [
             'subject_id' => 'required|exists:subjects,id',
             'title'      => 'required|string|max:255',
@@ -292,16 +320,16 @@ class TeacherDashboardController extends Controller
             'max_score'  => 'required|numeric|min:1|max:1000',
             'description'=> 'nullable|string|max:500',
         ]);
- 
+
         if ($v->fails()) {
             return back()->withErrors($v)->withInput();
         }
- 
+
         // Vérification que la matière appartient bien à cet enseignant
         Subject::where('id', $request->subject_id)
             ->where('teacher_id', $teacher->id)
             ->firstOrFail();
- 
+
         // Label lisible pour type_evaluation
         $typeLabels = [
             'controle'    => 'Contrôle',
@@ -312,13 +340,13 @@ class TeacherDashboardController extends Controller
             'devoir'      => 'Devoir',
             'composition' => 'Composition',
         ];
- 
+
         $data = $v->validated();
         $data['institution_id']   = $teacher->institution_id;
         $data['type_evaluation']  = $typeLabels[$data['type']] ?? ucfirst($data['type']);
- 
+
         $evaluation = Evaluation::create($data);
- 
+
         return back()->with('success', "Évaluation « {$evaluation->title} » créée avec succès.");
     }
     /* ═══════════════════════════════════════════════════════════
@@ -549,7 +577,7 @@ class TeacherDashboardController extends Controller
                 $avg = Grade::whereHas('evaluation', function ($q) use ($subjectIds, $classe, $month) {
                     $q->whereIn('subject_id', $subjectIds)
                         ->whereHas('subject', fn ($sq) => $sq->where('class_id', $classe->id))
-                        ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [$month]);
+                        ->whereRaw("TO_CHAR(date, 'YYYY-MM') = ?", [$month]);
                 })->avg('score');
                 $data[] = $avg ? round($avg, 1) : null;
             }
