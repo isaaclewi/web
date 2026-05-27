@@ -460,11 +460,11 @@ class ApprenantDashboardController extends Controller
         $data = [];
         foreach ($months as $month) {
             $avg = Grade::where('apprenant_id', $apprenant->id)
-                ->whereHas('evaluation', function ($q) use ($subjects, $month) {
-                    $q->whereIn('subject_id', $subjects->pluck('id'))
-                        ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [$month]);
-                })
-                ->avg('score');
+    ->whereHas('evaluation', function ($q) use ($subjects, $month) {
+        $q->whereIn('subject_id', $subjects->pluck('id'))
+          ->whereRaw("TO_CHAR(date, 'YYYY-MM') = ?", [$month]);
+    })
+    ->avg('score');
             $data[] = $avg ? round($avg, 1) : null;
         }
 
