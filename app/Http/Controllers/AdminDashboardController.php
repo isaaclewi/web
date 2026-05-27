@@ -469,24 +469,39 @@ $monthlyActivity = Grade::selectRaw('EXTRACT(MONTH FROM created_at)::int as mont
 
     $data = $request->validate([
         'name'              => 'required|string|max:255',
-        'address'           => 'nullable|string|max:500',
+        'academic_year'     => 'nullable|string|max:20',
+        'type'              => 'nullable|string|max:50',
+        'statut_juridique'  => 'nullable|string|max:50',
+        'date_creation'     => 'nullable|date',
+        'devise'            => 'nullable|string|max:255',
+        'pays'              => 'nullable|string|max:100',
+        'departement'       => 'nullable|string|max:100',
+        'commune'           => 'nullable|string|max:100',
+        'adresse'           => 'nullable|string|max:500',
         'telephone'         => 'nullable|string|max:30',
         'email'             => 'nullable|email|max:255',
-        'academic_year'     => 'nullable|string|max:20',
+        'site_web'          => 'nullable|url|max:255',
+        'description'       => 'nullable|string',
+        'historique'        => 'nullable|string',
+        'mission'           => 'nullable|string',
+        'vision'            => 'nullable|string',
+        'valeurs'           => 'nullable|string',
         'autorisation_etat' => 'nullable|boolean',
-        'logo'              => 'nullable|image|max:2048', // max 2MB
+        'logo'              => 'nullable|image|max:2048',
     ]);
 
     if ($request->hasFile('logo')) {
-        // Supprimer l'ancien logo
+        // Supprimer l'ancien logo s'il existe
         if ($institution->logo) {
-            Storage::disk('root_storage')->delete($institution->logo);
+            Storage::disk('public')->delete($institution->logo);
         }
-        $data['logo'] = $request->file('logo')->store('logos/institutions', 'root_storage');
+        // Stocker dans storage/app/public/logos/institutions/
+        $data['logo'] = $request->file('logo')->store('logos/institutions', 'public');
     }
 
     $data['autorisation_etat'] = (bool) $request->input('autorisation_etat', 0);
     unset($data['code']);
+
     $institution->update($data);
 
     return redirect()->back()->with('success', 'Établissement mis à jour.');
