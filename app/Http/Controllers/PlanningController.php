@@ -384,14 +384,23 @@ class PlanningController extends Controller
         $institution = $classe->institution;
         $annee = $institution->academic_year ?? date('Y').'-'.(date('Y') + 1);
 
-        // ── Emploi du temps ──
-        $emplois = EmploiDuTemps::where('classe_id', $classe->id)
-            ->where('annee_academique', $annee)
-            ->where('statut', 'actif')
-            ->with(['subject', 'teacher'])
-            ->orderByRaw("FIELD(jour,'lundi','mardi','mercredi','jeudi','vendredi','samedi')")
-            ->orderBy('heure_debut')
-            ->get();
+       $emplois = EmploiDuTemps::where('classe_id', $classe->id)
+    ->where('annee_academique', $annee)
+    ->where('statut', 'actif')
+    ->with(['subject', 'teacher'])
+    ->orderByRaw("
+        CASE jour
+            WHEN 'lundi' THEN 1
+            WHEN 'mardi' THEN 2
+            WHEN 'mercredi' THEN 3
+            WHEN 'jeudi' THEN 4
+            WHEN 'vendredi' THEN 5
+            WHEN 'samedi' THEN 6
+            ELSE 7
+        END
+    ")
+    ->orderBy('heure_debut')
+    ->get();
 
         // ── Séances de la semaine ──
         $lundi = now()->startOfWeek()->toDateString();
