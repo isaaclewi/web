@@ -432,44 +432,50 @@ class PlanningController extends Controller
     }
 
      public function teacherPlanning(Request $request)
-    {
-        $user        = Auth::user() ?? redirect()->route('login')->send();
-        $institution = $user->institution;
-        $teacher     = $user->teacher;
+{
+    $user = Auth::user() ?? redirect()->route('login')->send();
 
-        if (! $teacher) {
-            abort(403, 'Aucun profil enseignant lié à votre compte.');
-        }
+    $teacher = $user->teacher;
 
-        $instId = $institution->id;
-        $annee  = $institution->academic_year ?? date('Y').'-'.(date('Y') + 1);
-
-        // ── Emploi du temps de l'enseignant ──────────────────
-        $emplois = EmploiDuTemps::where('institution_id', $instId)
-            ->where('annee_academique', $annee)
-            ->where('statut', 'actif')
-            ->where('teacher_id', $teacher->id)       // ← uniquement SES cours
-            ->with(['classe', 'subject', 'teacher'])
-            ->get();
-
-        // Organiser par jour pour la grille (même structure que admin)
-        $grille = [];
-        foreach (EmploiDuTemps::jourLabels() as $j => $jLabel) {
-            $grille[$j] = $emplois->where('jour', $j)->values();
-        }
-
-        $jourLabels  = EmploiDuTemps::jourLabels();
-        $typeLabels  = EmploiDuTemps::typeLabels();
-        $typeColors  = EmploiDuTemps::typeColors();
-
-        $teacher->load(['classes', 'niveaux', 'filieres']);
-
-        return view('teacher.Planning', compact(
-            'user', 'institution', 'teacher', 'annee',
-            'emplois', 'grille',
-            'jourLabels', 'typeLabels', 'typeColors',
-        ));
+    if (! $teacher) {
+        abort(403, 'Aucun profil enseignant lié à votre compte.');
     }
+
+    // ✅ FIX: récupérer institution depuis teacher (ou fallback safe)
+    $institution = $teacher->institution ?? null;
+
+    if (! $institution) {
+        abort(403, 'Aucune institution liée à cet enseignant.');
+    }
+
+    $instId = $institution->id;
+    $annee  = $institution->academic_year ?? date('Y').'-'.(date('Y') + 1);
+
+    // ── Emploi du temps de l'enseignant ──────────────────
+    $emplois = EmploiDuTemps::where('institution_id', $instId)
+        ->where('annee_academique', $annee)
+        ->where('statut', 'actif')
+        ->where('teacher_id', $teacher->id)
+        ->with(['classe', 'subject', 'teacher'])
+        ->get();
+
+    $grille = [];
+    foreach (EmploiDuTemps::jourLabels() as $j => $jLabel) {
+        $grille[$j] = $emplois->where('jour', $j)->values();
+    }
+
+    $jourLabels = EmploiDuTemps::jourLabels();
+    $typeLabels = EmploiDuTemps::typeLabels();
+    $typeColors = EmploiDuTemps::typeColors();
+
+    $teacher->load(['classes', 'niveaux', 'filieres']);
+
+    return view('teacher.Planning', compact(
+        'user', 'institution', 'teacher', 'annee',
+        'emplois', 'grille',
+        'jourLabels', 'typeLabels', 'typeColors',
+    ));
+}
 
     /* ─── PLANNING PARENT (lecture seule, emplois des enfants) ─── */
     public function parentPlanning(Request $request)
