@@ -12,6 +12,11 @@ chmod -R 775 storage bootstrap/cache
 # === LARAVEL SETUP ===
 echo "=== LARAVEL SETUP ==="
 php artisan config:clear 2>&1
+
+# AJOUTE CES LIGNES dans docker-entrypoint.sh, avant config:cache
+
+echo "=== MIGRATIONS ==="
+php artisan migrate --force 2>&1
 php artisan config:cache 2>&1
 php artisan view:clear 2>&1
 
@@ -24,7 +29,7 @@ echo "=== TEST CONNEXION DB ==="
 php -r "
 try {
     \$pdo = new PDO(
-        'mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_DATABASE'),
+        'pgsql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_DATABASE'),
         getenv('DB_USERNAME'),
         getenv('DB_PASSWORD')
     );
