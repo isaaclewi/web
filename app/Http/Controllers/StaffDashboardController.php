@@ -246,7 +246,7 @@ class StaffDashboardController extends Controller
         }
 
         $apprenants = $query->orderBy('nom')->paginate(20)->withQueryString();
-        $moisLabels = Financialrecord::moisLabels();
+        $moisLabels = FinancialRecord::moisLabels();
 
         return view('staff.paiements', compact('staff', 'institution', 'apprenants', 'annee', 'search', 'statut', 'moisLabels'));
     }
@@ -272,7 +272,7 @@ class StaffDashboardController extends Controller
             ->where('institution_id', $institution->id)
             ->firstOrFail();
 
-        $moisLabels = Financialrecord::moisLabels();
+        $moisLabels = FinancialRecord::moisLabels();
         $reste = max(0, $data['montant_du'] - $data['montant_paye']);
         $statut = 'impaye';
         if ($data['montant_du'] > 0 && $data['montant_paye'] >= $data['montant_du']) {
@@ -281,7 +281,7 @@ class StaffDashboardController extends Controller
             $statut = 'partiel';
         }
 
-        Financialrecord::updateOrCreate(
+        FinancialRecord::updateOrCreate(
             ['apprenant_id' => $data['apprenant_id'], 'annee_academique' => $data['annee_academique'], 'mois' => $data['mois']],
             [
                 'institution_id' => $institution->id,
@@ -1981,18 +1981,18 @@ class StaffDashboardController extends Controller
         }
 
         $apprenants = $query->orderBy('nom')->paginate(25)->withQueryString();
-        $statsAnnee = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)
+        $statsAnnee = FinancialRecord::where('institution_id', $instId)->where('annee_academique', $annee)
             ->selectRaw('COALESCE(SUM(montant_du),0) as total_du, COALESCE(SUM(montant_paye),0) as total_paye, COALESCE(SUM(montant_reste),0) as total_reste, COUNT(CASE WHEN statut="paye" THEN 1 END) as nb_payes, COUNT(CASE WHEN statut="partiel" THEN 1 END) as nb_partiels, COUNT(CASE WHEN statut="impaye" THEN 1 END) as nb_impayes')
             ->first();
-        $statsMois = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)
+        $statsMois = FinancialRecord::where('institution_id', $instId)->where('annee_academique', $annee)
             ->selectRaw('mois, mois_label, SUM(montant_du) as du, SUM(montant_paye) as paye')->groupBy('mois', 'mois_label')->orderBy('mois')->get();
-        $recentPaiements = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)
+        $recentPaiements = FinancialRecord::where('institution_id', $instId)->where('annee_academique', $annee)
             ->whereNotNull('date_paiement')->with(['apprenant', 'recordedBy'])->orderByDesc('date_paiement')->limit(10)->get();
-        $anneesDispos = Financialrecord::where('institution_id', $instId)->distinct()->pluck('annee_academique')->sort()->values();
+        $anneesDispos = FinancialRecord::where('institution_id', $instId)->distinct()->pluck('annee_academique')->sort()->values();
         if (! $anneesDispos->contains($annee)) {
             $anneesDispos->prepend($annee);
         }
-        $moisLabels = Financialrecord::moisLabels();
+        $moisLabels = FinancialRecord::moisLabels();
 
         return view('staff.paiements', compact(
             'user', 'institution', 'apprenants', 'annee', 'search', 'statut',
@@ -2012,12 +2012,12 @@ class StaffDashboardController extends Controller
     $instId = $institution->id;
     $user = Auth::user();
     $annee = request('annee', $institution->academic_year ?? date('Y').'-'.(date('Y') + 1));
-    $moisLabels = Financialrecord::moisLabels();
-    $anneesDispos = Financialrecord::where('apprenant_id', $apprenant->id)->distinct()->pluck('annee_academique')->sort()->values();
+    $moisLabels = FinancialRecord::moisLabels();
+    $anneesDispos = FinancialRecord::where('apprenant_id', $apprenant->id)->distinct()->pluck('annee_academique')->sort()->values();
     if (! $anneesDispos->contains($annee)) {
         $anneesDispos->prepend($annee);
     }
-    $allRecords = Financialrecord::where('apprenant_id', $apprenant->id)->with(['recordedBy', 'validatedBy'])->orderBy('annee_academique')->orderBy('mois')->get();
+    $allRecords = FinancialRecord::where('apprenant_id', $apprenant->id)->with(['recordedBy', 'validatedBy'])->orderBy('annee_academique')->orderBy('mois')->get();
     $records = $allRecords->where('annee_academique', $annee)->keyBy('mois');
     $totaux = ['du' => $records->sum('montant_du'), 'paye' => $records->sum('montant_paye'), 'reste' => $records->sum('montant_reste')];
 
@@ -2066,7 +2066,7 @@ class StaffDashboardController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
         $apprenant = Apprenant::where('id', $data['apprenant_id'])->where('institution_id', $institution->id)->firstOrFail();
-        $moisLabels = Financialrecord::moisLabels();
+        $moisLabels = FinancialRecord::moisLabels();
         $reste = max(0, $data['montant_du'] - $data['montant_paye']);
         $statut = 'impaye';
         if ($data['montant_du'] > 0 && $data['montant_paye'] >= $data['montant_du']) {
@@ -2075,7 +2075,7 @@ class StaffDashboardController extends Controller
             $statut = 'partiel';
         }
 
-        Financialrecord::updateOrCreate(
+        FinancialRecord::updateOrCreate(
             ['apprenant_id' => $apprenant->id, 'annee_academique' => $data['annee_academique'], 'mois' => $data['mois']],
             [
                 'institution_id' => $institution->id, 'mois_label' => $moisLabels[$data['mois']],
@@ -2089,7 +2089,7 @@ class StaffDashboardController extends Controller
         return redirect()->back()->with('success', "Paiement de {$apprenant->prenom} {$apprenant->nom} ({$moisLabels[$data['mois']]}) enregistré.");
     }
 
-    public function financialValidate(Financialrecord $record)
+    public function financialValidate(FinancialRecord $record)
     {
         $this->assertBelongsToInstitution($record, $this->getInstitution()->id, 'Enregistrement');
         $record->update(['validated_by' => Auth::id(), 'validated_at' => now()]);
@@ -2097,7 +2097,7 @@ class StaffDashboardController extends Controller
         return redirect()->back()->with('success', 'Enregistrement validé et signé.');
     }
 
-    public function financialDestroy(Financialrecord $record)
+    public function financialDestroy(FinancialRecord $record)
     {
         $this->assertBelongsToInstitution($record, $this->getInstitution()->id, 'Enregistrement');
         $record->delete();
@@ -2109,7 +2109,7 @@ class StaffDashboardController extends Controller
     {
         $instId = $this->getInstitution()->id;
         $annee = $request->get('annee', Auth::user()->institution->academic_year);
-        $records = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)
+        $records = FinancialRecord::where('institution_id', $instId)->where('annee_academique', $annee)
             ->with(['apprenant.classe', 'recordedBy', 'validatedBy'])->orderBy('mois')->get();
         $headers = ['Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => 'attachment; filename="finances_'.$annee.'_'.now()->format('Ymd').'.csv"'];
 
@@ -2911,11 +2911,11 @@ class StaffDashboardController extends Controller
         $tauxAffectation = $totalApprenants > 0
             ? round(($totalApprenants - $apprenantsSansClasse) / $totalApprenants * 100, 1) : 0;
 
-        $finStats = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)
+        $finStats = FinancialRecord::where('institution_id', $instId)->where('annee_academique', $annee)
             ->selectRaw('COALESCE(SUM(montant_du),0) as total_du, COALESCE(SUM(montant_paye),0) as total_paye, COALESCE(SUM(montant_reste),0) as total_reste, COUNT(CASE WHEN statut="paye" THEN 1 END) as nb_payes, COUNT(CASE WHEN statut="partiel" THEN 1 END) as nb_partiels, COUNT(CASE WHEN statut="impaye" THEN 1 END) as nb_impayes, COUNT(*) as nb_total')
             ->first();
 
-        $finMensuel = Financialrecord::where('institution_id', $instId)->where('annee_academique', $annee)
+        $finMensuel = FinancialRecord::where('institution_id', $instId)->where('annee_academique', $annee)
             ->selectRaw('mois, mois_label, SUM(montant_du) as du, SUM(montant_paye) as paye, SUM(montant_reste) as reste')
             ->groupBy('mois', 'mois_label')->orderBy('mois')->get();
 
