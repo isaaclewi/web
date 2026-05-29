@@ -340,7 +340,7 @@
                     '{{ addslashes($s->classe?->name ?? '') }}',
                     '{{ addslashes($s->teacher?->nom ?? '') }}',
                     '{{ $date->format('d/m/Y') }}',
-                    '{{ \Carbon\Carbon::parse($s->heure_debut)->format('H:i') }}–{{ \Carbon\Carbon::parse($s->heure_fin)->format('H:i') }}',
+                    '{{ $s->heure_debut ? \Carbon\Carbon::parse($s->heure_debut)->format('H:i') : '--' }}–{{ $s->heure_fin ? \Carbon\Carbon::parse($s->heure_fin)->format('H:i') : '--' }}',
                     '{{ $s->statut }}',
                     '{{ addslashes($s->titre ?? '') }}'
                 )"

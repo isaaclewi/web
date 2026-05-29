@@ -2947,16 +2947,16 @@ $teachersFemmes = $teachersByGender->get('F')?->total ?? 0;
             ? round(($totalApprenants - $apprenantsSansParent) / $totalApprenants * 100, 1) : 0;
 
         return view('staff.rapports', compact(
-            'user', 'institution', 'annee',
-            'totalApprenants', 'actifsApprenants', 'garcons', 'filles',
-            'apprenantsByClasse', 'apprenantsByNiveau', 'apprenantsSansClasse', 'tauxAffectation',
-            'totalTeachers', 'actifsTeachers', 'teachersBySexe', 'teachersByContrat',
-            'totalClasses', 'totalMatieres', 'totalFilieres', 'totalNiveaux',
-            'finStats', 'finMensuel', 'topDebiteurs',
-            'totalStaff', 'actifsStaff', 'staffByUnit',
-            'totalParents', 'apprenantsSansParent', 'tauxCouvertureParents',
-            'teachersByGender', 'teachersHommes', 'teachersFemmes'
-        ));
+    'user', 'institution', 'annee',
+    'totalApprenants', 'actifsApprenants', 'garcons', 'filles',
+    'apprenantsByClasse', 'apprenantsByNiveau', 'apprenantsSansClasse', 'tauxAffectation',
+    'totalTeachers', 'actifsTeachers', 'teachersByContrat',
+    'totalClasses', 'totalMatieres', 'totalFilieres', 'totalNiveaux',
+    'finStats', 'finMensuel', 'topDebiteurs',
+    'totalStaff', 'actifsStaff', 'staffByUnit',
+    'totalParents', 'apprenantsSansParent', 'tauxCouvertureParents',
+    'teachersByGender', 'teachersHommes', 'teachersFemmes'
+));
     }
 
     /**

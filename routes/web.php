@@ -523,10 +523,9 @@ Route::prefix('staff')->name('staff.')->middleware(['auth'])->group(function () 
     Route::post('/apprenants/import', [StaffDashboardController::class, 'apprenantImport'])->name('apprenants.import');
 
     Route::get('/finances', [StaffDashboardController::class, 'financial'])->name('finances');
-
-    Route::get('/finances/{apprenant}', [StaffDashboardController::class, 'financialApprenant'])->name('finances.show');
-    Route::post('/paiements', [StaffDashboardController::class, 'financialStore'])->name('paiements.store');
-    Route::get('/finances/export', [StaffDashboardController::class, 'financialExport'])->name('finances.export');
+Route::get('/finances/export', [StaffDashboardController::class, 'financialExport'])->name('finances.export');
+Route::get('/finances/{apprenant}', [StaffDashboardController::class, 'financialApprenant'])->name('finances.show');
+Route::post('/paiements', [StaffDashboardController::class, 'financialStore'])->name('paiements.store');
 
 
     Route::get('/parents', [StaffDashboardController::class, 'parents'])->name('parents');
