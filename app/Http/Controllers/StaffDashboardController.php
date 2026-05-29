@@ -2897,8 +2897,11 @@ class StaffDashboardController extends Controller
 
         $totalTeachers = Teacher::where('institution_id', $instId)->count();
         $actifsTeachers = Teacher::where('institution_id', $instId)->where('status', 1)->count();
-        $teachersBySexe = DB::table('teachers')->where('institution_id', $instId)
-            ->select('sexe', DB::raw('COUNT(*) as total'))->groupBy('sexe')->get()->keyBy('sexe');
+        $teachersByGender = DB::table('teachers')->where('institution_id', $instId)
+    ->select('sexe', DB::raw('COUNT(*) as total'))->groupBy('sexe')->get()->keyBy('sexe');
+
+$teachersHommes = $teachersByGender->get('M')?->total ?? 0;
+$teachersFemmes = $teachersByGender->get('F')?->total ?? 0;
         $teachersByContrat = DB::table('teachers')->where('institution_id', $instId)->whereNotNull('type_contrat')
             ->select('type_contrat', DB::raw('COUNT(*) as total'))->groupBy('type_contrat')->orderByDesc('total')->get();
 
@@ -2952,6 +2955,7 @@ class StaffDashboardController extends Controller
             'finStats', 'finMensuel', 'topDebiteurs',
             'totalStaff', 'actifsStaff', 'staffByUnit',
             'totalParents', 'apprenantsSansParent', 'tauxCouvertureParents',
+            'teachersByGender', 'teachersHommes', 'teachersFemmes'
         ));
     }
 

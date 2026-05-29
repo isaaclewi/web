@@ -352,7 +352,7 @@ Route::prefix('teacher')->name('teacher.')->group(function () {
     Route::post('/sujets', [SujetController::class, 'teacherStore'])->name('sujets.store');
     Route::delete('/sujets/{sujet}', [SujetController::class, 'teacherDestroy'])->name('sujets.destroy');
     Route::get('/sujets/fichier/{fichier}/download', [SujetController::class, 'teacherDownload'])->name('sujets.download');
-    
+
     Route::post('/profil/avatar', [ProfileController::class, 'updateTeacherAvatar'])
     ->name('profil.avatar');
 Route::patch('/profil/infos', [ProfileController::class, 'updateTeacherInfos'])
@@ -390,7 +390,7 @@ Route::prefix('parent')->name('parent.')->middleware(['auth'])->group(function (
         ->name('planning');
 
     Route::get('/enfant/{apprenant}/bulletins', [GradeConfigController::class, 'parentBulletins'])->name('enfant.bulletins');
-    
+
     Route::get('/profil', [ProfileController::class, 'parentShow'])
     ->name('profil');
 Route::post('/profil/avatar', [ProfileController::class, 'updateParentAvatar'])
@@ -459,17 +459,17 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::get('/ai-coach', [\App\Http\Controllers\ApprenantDashboardController::class, 'aiCoach'])
         ->middleware('auth')
         ->name('ai-coach');
- 
+
     // ── 8. PROXY ANTHROPIC (appels depuis le JS du Coach IA) ────
     Route::post('/ai-chat', [\App\Http\Controllers\ApprenantDashboardController::class, 'aiChat'])
         ->middleware('auth')
         ->name('ai-chat');
-    
+
     Route::post('/profil/avatar', [ProfileController::class, 'updateApprenantAvatar'])
     ->name('profil.avatar');
 Route::patch('/profil/infos', [ProfileController::class, 'updateApprenantInfos'])
     ->name('profil.infos');
- 
+
 });
 
 /* ─────────────────────────────────────
@@ -523,9 +523,11 @@ Route::prefix('staff')->name('staff.')->middleware(['auth'])->group(function () 
     Route::post('/apprenants/import', [StaffDashboardController::class, 'apprenantImport'])->name('apprenants.import');
 
     Route::get('/finances', [StaffDashboardController::class, 'financial'])->name('finances');
+
     Route::get('/finances/{apprenant}', [StaffDashboardController::class, 'financialApprenant'])->name('finances.show');
     Route::post('/paiements', [StaffDashboardController::class, 'financialStore'])->name('paiements.store');
     Route::get('/finances/export', [StaffDashboardController::class, 'financialExport'])->name('finances.export');
+
 
     Route::get('/parents', [StaffDashboardController::class, 'parents'])->name('parents');
 
@@ -557,6 +559,9 @@ Route::prefix('staff')->name('staff.')->middleware(['auth'])->group(function () 
     // 🔹 DISCIPLINAIRE
     Route::get('/disciplinaire', [StaffDashboardController::class, 'DisciplinaireIndex'])->name('disciplinaire');
 
+    Route::get('/disciplinaire/export', [StaffDashboardController::class, 'DisciplinaireExport'])
+        ->name('disciplinaire.export');
+
     Route::get('/disciplinaire/apprenant/{apprenant}', [StaffDashboardController::class, 'DisciplinaireApprenant'])
         ->name('disciplinaire.apprenant');
 
@@ -569,8 +574,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth'])->group(function () 
     Route::delete('/disciplinaire/{disciplinaire}', [StaffDashboardController::class, 'DisciplinaireDestroy'])
         ->name('disciplinaire.destroy');
 
-    Route::get('/disciplinaire/export', [StaffDashboardController::class, 'DisciplinaireExport'])
-        ->name('disciplinaire.export');
+
 
     Route::get('/rapports', [StaffDashboardController::class, 'rapports'])->name('rapports');
 

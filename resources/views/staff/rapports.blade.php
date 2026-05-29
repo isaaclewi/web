@@ -114,7 +114,7 @@
 
     <div class="stat-card">
         <div class="stat-val">
-            {{ $teachersBySexe['M']->total ?? 0 }} / {{ $teachersBySexe['F']->total ?? 0 }}
+          {{ $teachersHommes }} / {{ $teachersFemmes }}
         </div>
         <div class="stat-lbl">Hommes / Femmes</div>
     </div>

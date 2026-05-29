@@ -280,8 +280,8 @@
         @forelse($items as $e)
         <div class="creneau-card c-{{ $e->type }}">
             <div class="creneau-time">
-                {{ \Carbon\Carbon::parse($e->heure_debut)->format('H:i') }}
-                <span>{{ \Carbon\Carbon::parse($e->heure_fin)->format('H:i') }}</span>
+                {{ $e->heure_debut ? \Carbon\Carbon::parse($e->heure_debut)->format('H:i') : '--:--' }}
+                <span>{{ $e->heure_fin ? \Carbon\Carbon::parse($e->heure_fin)->format('H:i') : '--:--' }}</span>
             </div>
             <div>
                 <div style="font-weight:600;font-size:.83rem">{{ $e->subject?->name ?? '—' }}</div>
@@ -327,7 +327,7 @@
             <div style="font-weight:600;font-size:.83rem">{{ $s->subject?->name ?? '—' }}</div>
             <div style="font-size:.72rem;color:var(--mist)">
                 {{ $s->classe?->name }} · {{ $s->teacher?->nom }}
-                · {{ \Carbon\Carbon::parse($s->heure_debut)->format('H:i') }}–{{ \Carbon\Carbon::parse($s->heure_fin)->format('H:i') }}
+                ·{{ $s->heure_debut ? \Carbon\Carbon::parse($s->heure_debut)->format('H:i') : '--' }}–{{ $s->heure_fin ? \Carbon\Carbon::parse($s->heure_fin)->format('H:i') : '--' }}
                 @if($s->salle) · Salle {{ $s->salle }}@endif
             </div>
             @if($s->titre)<div style="font-size:.72rem;color:#374151;margin-top:.2rem">{{ $s->titre }}</div>@endif
