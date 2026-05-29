@@ -59,13 +59,13 @@ return [
             'throw' => false,
             'report' => false,
         ],
-        
-		'root_storage' => [
-        'driver' => 'local',
-        'root'   => base_path('storage'), // pointe vers /racine/storage
-        'url'    => env('APP_URL').'/storage',
-        'visibility' => 'public',
-    ],
+
+        'root_storage' => [
+            'driver' => 'local',
+            'root' => base_path('storage'), // pointe vers /racine/storage
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'public',
+        ],
     ],
 
     /*

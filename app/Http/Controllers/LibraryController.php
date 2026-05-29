@@ -59,40 +59,39 @@ class LibraryController extends Controller
 
     /** Upload du fichier et de la couverture. Retourne les paths. */
     private function handleUploads(Request $request, ?LibraryBook $existing = null): array
-    {
-        $data = [];
+{
+    $data = [];
 
-        if ($request->hasFile('file')) {
-            // Supprimer l'ancien fichier
-            if ($existing && $existing->file_path) {
-                Storage::disk('public')->delete($existing->file_path);
-            }
-            $file = $request->file('file');
-            $ext  = $file->getClientOriginalExtension();
-            $path = $file->storeAs(
-                'library/books',
-                Str::slug($request->title) . '_' . time() . '.' . $ext,
-                'public'
-            );
-            $data['file_path']  = $path;
-            $data['file_type']  = $this->resolveFileType($ext);
-            $data['file_size']  = $file->getSize();
+    if ($request->hasFile('file')) {
+        if ($existing && $existing->file_path) {
+            Storage::disk('root_storage')->delete($existing->file_path);
         }
-
-        if ($request->hasFile('cover')) {
-            if ($existing && $existing->cover_path) {
-                Storage::disk('public')->delete($existing->cover_path);
-            }
-            $cover = $request->file('cover');
-            $data['cover_path'] = $cover->storeAs(
-                'library/covers',
-                Str::slug($request->title) . '_cover_' . time() . '.' . $cover->getClientOriginalExtension(),
-                'public'
-            );
-        }
-
-        return $data;
+        $file = $request->file('file');
+        $ext  = $file->getClientOriginalExtension();
+        $path = $file->storeAs(
+            'library/books',
+            Str::slug($request->title).'_'.time().'.'.$ext,
+            'root_storage'
+        );
+        $data['file_path'] = $path;
+        $data['file_type'] = $this->resolveFileType($ext);
+        $data['file_size'] = $file->getSize();
     }
+
+    if ($request->hasFile('cover')) {
+        if ($existing && $existing->cover_path) {
+            Storage::disk('root_storage')->delete($existing->cover_path);
+        }
+        $cover = $request->file('cover');
+        $data['cover_path'] = $cover->storeAs(
+            'library/covers',
+            Str::slug($request->title).'_cover_'.time().'.'.$cover->getClientOriginalExtension(),
+            'root_storage'
+        );
+    }
+
+    return $data;
+}
 
     /* ══════════════════════════════════════════════════════
      |  ① SUPERADMIN — toutes les ressources
@@ -148,13 +147,12 @@ class LibraryController extends Controller
     }
 
     /** DELETE /superadmin/library/{book} */
-    public function superDestroy(LibraryBook $book)
-    {
-        Storage::disk('public')->delete([$book->file_path, $book->cover_path]);
-        $book->forceDelete();
-
-        return back()->with('success', 'Livre supprimé définitivement.');
-    }
+  public function superDestroy(LibraryBook $book)
+{
+    Storage::disk('root_storage')->delete([$book->file_path, $book->cover_path]);
+    $book->forceDelete();
+    return back()->with('success', 'Livre supprimé définitivement.');
+}
 
     /** PATCH /superadmin/library/{book}/toggle */
     public function superTogglePublish(LibraryBook $book)
@@ -222,15 +220,13 @@ class LibraryController extends Controller
     }
 
     /** DELETE /admin/library/{book} */
-    public function adminDestroy(LibraryBook $book)
-    {
-        abort_if($book->institution_id !== $this->currentInstitutionId(), 403);
-
-        Storage::disk('public')->delete([$book->file_path, $book->cover_path]);
-        $book->delete();
-
-        return back()->with('success', 'Livre supprimé.');
-    }
+   public function adminDestroy(LibraryBook $book)
+{
+    abort_if($book->institution_id !== $this->currentInstitutionId(), 403);
+    Storage::disk('root_storage')->delete([$book->file_path, $book->cover_path]);
+    $book->delete();
+    return back()->with('success', 'Livre supprimé.');
+}
 
     /* ══════════════════════════════════════════════════════
      |  ③ ENSEIGNANT — consulte + ajoute des cours
@@ -280,14 +276,12 @@ class LibraryController extends Controller
 
     /** DELETE /teacher/library/{book} — uniquement ses propres uploads */
     public function teacherDestroy(LibraryBook $book)
-    {
-        abort_if($book->uploaded_by !== Auth::id(), 403, 'Action non autorisée.');
-
-        Storage::disk('public')->delete([$book->file_path, $book->cover_path]);
-        $book->delete();
-
-        return back()->with('success', 'Ressource supprimée.');
-    }
+{
+    abort_if($book->uploaded_by !== Auth::id(), 403, 'Action non autorisée.');
+    Storage::disk('root_storage')->delete([$book->file_path, $book->cover_path]);
+    $book->delete();
+    return back()->with('success', 'Ressource supprimée.');
+}
 
     /* ══════════════════════════════════════════════════════
      |  ④ ÉTUDIANT — lecture uniquement (téléchargement selon flag)
@@ -321,37 +315,39 @@ class LibraryController extends Controller
      * GET /library/{book}/read
      */
     public function read(LibraryBook $book)
-    {
-        $institutionId = $this->currentInstitutionId();
-        $this->authorizeView($book, $institutionId);
+{
+    $institutionId = $this->currentInstitutionId();
+    $this->authorizeView($book, $institutionId);
 
-        $book->incrementViews();
+    $book->incrementViews();
 
-        return view('read', compact('book'));
-    }
+    $fileUrl = Storage::disk('root_storage')->url($book->file_path);
+
+    return view('read', compact('book', 'fileUrl'));
+}
 
     /**
      * Téléchargement du fichier.
      * GET /library/{book}/download
      */
-    public function download(LibraryBook $book)
-    {
-        $institutionId = $this->currentInstitutionId();
-        $this->authorizeView($book, $institutionId);
+  public function download(LibraryBook $book)
+{
+    $institutionId = $this->currentInstitutionId();
+    $this->authorizeView($book, $institutionId);
 
-        if (! $book->allow_download) {
-            abort(403, 'Le téléchargement de ce document n\'est pas autorisé.');
-        }
-
-        abort_unless(Storage::disk('public')->exists($book->file_path), 404);
-
-        $book->incrementDownloads();
-
-        return Storage::disk('public')->download(
-            $book->file_path,
-            Str::slug($book->title) . '.' . pathinfo($book->file_path, PATHINFO_EXTENSION)
-        );
+    if (! $book->allow_download) {
+        abort(403, 'Le téléchargement de ce document n\'est pas autorisé.');
     }
+
+    abort_unless(Storage::disk('root_storage')->exists($book->file_path), 404);
+
+    $book->incrementDownloads();
+
+    return Storage::disk('root_storage')->download(
+        $book->file_path,
+        Str::slug($book->title).'.'.pathinfo($book->file_path, PATHINFO_EXTENSION)
+    );
+}
 
     /* ══════════════════════════════════════════════════════
      |  HELPERS INTERNES

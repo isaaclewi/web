@@ -88,19 +88,20 @@ class LibraryBook extends Model
     ──────────────────────────────────────────── */
 
     public function getCoverUrlAttribute(): string
-    {
-        if ($this->cover_path && Storage::disk('public')->exists($this->cover_path)) {
-            return asset('storage/' . $this->cover_path);
-        }
-        return asset('images/book-placeholder.png');
+{
+    if ($this->cover_path) {
+        return Storage::disk('root_storage')->url($this->cover_path);
     }
+    return asset('images/book-placeholder.png');
+}
 
-    public function getFileUrlAttribute(): string
-    {
-        return Storage::disk('public')->exists($this->file_path)
-            ? asset('storage/' . $this->file_path)
-            : '#';
+public function getFileUrlAttribute(): string
+{
+    if ($this->file_path) {
+        return Storage::disk('root_storage')->url($this->file_path);
     }
+    return '#';
+}
 
     public function getFileSizeHumanAttribute(): string
     {
