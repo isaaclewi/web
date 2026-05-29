@@ -1982,7 +1982,7 @@ class StaffDashboardController extends Controller
 
         $apprenants = $query->orderBy('nom')->paginate(25)->withQueryString();
         $statsAnnee = FinancialRecord::where('institution_id', $instId)->where('annee_academique', $annee)
-            ->selectRaw('COALESCE(SUM(montant_du),0) as total_du, COALESCE(SUM(montant_paye),0) as total_paye, COALESCE(SUM(montant_reste),0) as total_reste, COUNT(CASE WHEN statut="paye" THEN 1 END) as nb_payes, COUNT(CASE WHEN statut="partiel" THEN 1 END) as nb_partiels, COUNT(CASE WHEN statut="impaye" THEN 1 END) as nb_impayes')
+            ->selectRaw("COALESCE(SUM(montant_du),0) as total_du, COALESCE(SUM(montant_paye),0) as total_paye, COALESCE(SUM(montant_reste),0) as total_reste, COUNT(CASE WHEN statut='paye' THEN 1 END) as nb_payes, COUNT(CASE WHEN statut='partiel' THEN 1 END) as nb_partiels, COUNT(CASE WHEN statut='impaye' THEN 1 END) as nb_impayes")
             ->first();
         $statsMois = FinancialRecord::where('institution_id', $instId)->where('annee_academique', $annee)
             ->selectRaw('mois, mois_label, SUM(montant_du) as du, SUM(montant_paye) as paye')->groupBy('mois', 'mois_label')->orderBy('mois')->get();
@@ -2600,9 +2600,9 @@ class StaffDashboardController extends Controller
             $edtQuery->where('jour', $jour);
         }
 
-        $emploisDuTemps = $edtQuery->orderByRaw("FIELD(jour,'lundi','mardi','mercredi','jeudi','vendredi','samedi')")
-            ->orderBy('heure_debut')
-            ->get();
+        $emploisDuTemps = $edtQuery->orderByRaw("CASE jour WHEN 'lundi' THEN 1 WHEN 'mardi' THEN 2 WHEN 'mercredi' THEN 3 WHEN 'jeudi' THEN 4 WHEN 'vendredi' THEN 5 WHEN 'samedi' THEN 6 ELSE 7 END")
+    ->orderBy('heure_debut')
+    ->get();
 
         // Organiser par jour pour la grille
         $grille = [];
@@ -2908,14 +2908,14 @@ $teachersFemmes = $teachersByGender->get('F')?->total ?? 0;
         $totalClasses = Classe::where('institution_id', $instId)->count();
         $totalMatieres = Subject::where('institution_id', $instId)->count();
         $totalFilieres = Filiere::where('institution_id', $instId)->count();
-        $totalNiveaux = Niveau::withCount(['classes' => fn ($q) => $q->where('institution_id', $instId)])->having('classes_count', '>', 0)->count();
+        $totalNiveaux = Niveau::whereHas('classes', fn ($q) => $q->where('institution_id', $instId))->count();
 
         $apprenantsSansClasse = Apprenant::where('institution_id', $instId)->whereNull('class_id')->count();
         $tauxAffectation = $totalApprenants > 0
             ? round(($totalApprenants - $apprenantsSansClasse) / $totalApprenants * 100, 1) : 0;
 
         $finStats = FinancialRecord::where('institution_id', $instId)->where('annee_academique', $annee)
-            ->selectRaw('COALESCE(SUM(montant_du),0) as total_du, COALESCE(SUM(montant_paye),0) as total_paye, COALESCE(SUM(montant_reste),0) as total_reste, COUNT(CASE WHEN statut="paye" THEN 1 END) as nb_payes, COUNT(CASE WHEN statut="partiel" THEN 1 END) as nb_partiels, COUNT(CASE WHEN statut="impaye" THEN 1 END) as nb_impayes, COUNT(*) as nb_total')
+            ->selectRaw("COALESCE(SUM(montant_du),0) as total_du, COALESCE(SUM(montant_paye),0) as total_paye, COALESCE(SUM(montant_reste),0) as total_reste, COUNT(CASE WHEN statut='paye' THEN 1 END) as nb_payes, COUNT(CASE WHEN statut='partiel' THEN 1 END) as nb_partiels, COUNT(CASE WHEN statut='impaye' THEN 1 END) as nb_impayes, COUNT(*) as nb_total")
             ->first();
 
         $finMensuel = FinancialRecord::where('institution_id', $instId)->where('annee_academique', $annee)
