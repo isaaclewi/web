@@ -105,7 +105,7 @@ class StaffDashboardController extends Controller
 
         if (in_array('paiements', $moduleKeys)) {
             $annee = $institution->academic_year ?? date('Y').'-'.(date('Y') + 1);
-            $stats['impaye'] = Financialrecord::where('institution_id', $instId)
+            $stats['impaye'] = FinancialRecord::where('institution_id', $instId)
                 ->where('annee_academique', $annee)
                 ->where('statut', 'impaye')
                 ->sum('montant_reste');
@@ -126,7 +126,7 @@ class StaffDashboardController extends Controller
         }
         if (in_array('paiements', $moduleKeys)) {
             $annee = $institution->academic_year ?? date('Y').'-'.(date('Y') + 1);
-            $activitesRecentes['paiements'] = Financialrecord::where('institution_id', $instId)
+            $activitesRecentes['paiements'] = FinancialRecord::where('institution_id', $instId)
                 ->where('annee_academique', $annee)
                 ->whereNotNull('date_paiement')
                 ->with('apprenant')
@@ -1570,7 +1570,7 @@ class StaffDashboardController extends Controller
     /* ══════════════════════════════════════════════════════════
      | CONFIG DE NOTATION — affichage + modification
      ══════════════════════════════════════════════════════════ */
-    
+
     public function updateConfig(Request $request)
     {
         $institution = $this->getInstitution();
@@ -1744,37 +1744,37 @@ class StaffDashboardController extends Controller
     $institution = $this->getInstitution();
     $config      = $this->getOrCreateConfig($institution);
     $periodes    = $this->listePeriodes($config);
- 
+
     $classes = Classe::where('institution_id', $institution->id)
         ->withCount('apprenants')
         ->orderBy('name')
         ->get();
- 
+
     $subjects = Subject::where('institution_id', $institution->id)
         ->with(['classe', 'teacher'])
         ->orderBy('name')
         ->get();
- 
+
     // ✅ FIX BUG 2 : double source d'évaluations
     $directIds    = Evaluation::where('institution_id', $institution->id)->pluck('id');
     $viaSubjectIds = Evaluation::whereHas(
         'subject', fn($q) => $q->where('institution_id', $institution->id)
     )->pluck('id');
     $allEvalIds = $directIds->merge($viaSubjectIds)->unique()->values();
- 
+
     $evaluations = Evaluation::whereIn('id', $allEvalIds)
         ->with(['subject.classe', 'grades'])
         ->orderByDesc('date')
         ->get();
- 
+
     $selectedEval   = null;
     $evalApprenants = collect();
- 
+
     if ($request->filled('evaluation_id')) {
         $selectedEval = Evaluation::whereIn('id', $allEvalIds)
             ->with(['subject.classe', 'grades.apprenant'])
             ->find($request->evaluation_id);
- 
+
         if ($selectedEval) {
             $classeId = $selectedEval->subject->class_id ?? null;
             $evalApprenants = $classeId
@@ -1785,21 +1785,21 @@ class StaffDashboardController extends Controller
                 : collect();
         }
     }
- 
+
     // ── Stats bulletins ──
     $statsParPeriode = [];
     foreach ($periodes as $p) {
         $q = Bulletin::where('institution_id', $institution->id)
             ->where('annee_academique', $config->annee_academique)
             ->where('periode', $p['key']);
- 
+
         $statsParPeriode[$p['key']] = [
             'total'   => (clone $q)->count(),
             'publie'  => (clone $q)->where('publie', true)->count(),
             'calcule' => (clone $q)->whereNotNull('calcule_at')->count(),
         ];
     }
- 
+
     // ── Notes récentes (double source) ──
     $notesRecentes = Grade::join('evaluations', 'grades.evaluation_id', '=', 'evaluations.id')
         ->join('subjects', 'evaluations.subject_id', '=', 'subjects.id')
@@ -1818,22 +1818,22 @@ class StaffDashboardController extends Controller
         ->orderByDesc('grades.created_at')
         ->limit(20)
         ->get();
- 
+
     // ── Bulletins filtrés ──
     $periode  = $request->get('periode', $periodes[0]['key'] ?? 'trimestre1');
     $classeId = $request->get('classe_id');
     $publie   = $request->get('publie');
- 
+
     $bulletinQuery = Bulletin::where('institution_id', $institution->id)
         ->where('annee_academique', $config->annee_academique)
         ->where('periode', $periode)
         ->with(['apprenant', 'classe']);
- 
+
     if ($classeId)        $bulletinQuery->where('classe_id', $classeId);
     if ($publie !== null) $bulletinQuery->where('publie', (bool) $publie);
- 
+
     $bulletins = $bulletinQuery->orderBy('rang')->paginate(30)->withQueryString();
- 
+
     return view('staff.notes', compact(
         'institution', 'config', 'classes', 'subjects', 'periodes',
         'evaluations', 'selectedEval', 'evalApprenants',
@@ -3390,7 +3390,7 @@ class StaffDashboardController extends Controller
     public function evaluationStore(Request $request)
 {
     $institution = $this->getInstitution();
- 
+
     $data = $request->validate([
         'subject_id'  => 'required|exists:subjects,id',
         'title'       => 'required|string|max:255',
@@ -3399,18 +3399,18 @@ class StaffDashboardController extends Controller
         'date'        => 'required|date',
         'max_score'   => 'required|numeric|min:1|max:1000',
     ]);
- 
+
     Subject::where('id', $data['subject_id'])
         ->where('institution_id', $institution->id)
         ->firstOrFail();
- 
+
     $typeLabels = [
         'controle'    => 'Contrôle',    'examen'      => 'Examen',
         'tp'          => 'Travaux pratiques', 'projet' => 'Projet',
         'interro'     => 'Interrogation', 'devoir'    => 'Devoir',
         'composition' => 'Composition',
     ];
- 
+
     $eval = Evaluation::create([
         'subject_id'      => $data['subject_id'],
         'title'           => $data['title'],
@@ -3421,7 +3421,7 @@ class StaffDashboardController extends Controller
         'max_score'       => $data['max_score'],
         'institution_id'  => $institution->id,
     ]);
- 
+
     return redirect()
         ->route('staff.bulletins', ['evaluation_id' => $eval->id])
         ->with('success', "Évaluation « {$eval->title} » créée. Saisissez maintenant les notes.");
@@ -3430,56 +3430,56 @@ class StaffDashboardController extends Controller
     public function evaluationDestroy(Evaluation $evaluation)
 {
     $institution = $this->getInstitution();
- 
+
     $appartient = (int) $evaluation->institution_id === $institution->id
         || Subject::where('id', $evaluation->subject_id)
             ->where('institution_id', $institution->id)->exists();
- 
+
     if (! $appartient) abort(403);
- 
+
     DB::transaction(function () use ($evaluation) {
         $evaluation->grades()->delete();
         $evaluation->delete();
     });
- 
+
     return redirect()->back()->with('success', 'Évaluation supprimée.');
 }
 
     public function gradesStore(Request $request)
 {
     $institution = $this->getInstitution();
- 
+
     $request->validate([
         'evaluation_id' => 'required|exists:evaluations,id',
         'grades'        => 'required|array',
     ]);
- 
+
     // ✅ Double source
     $directIds     = Evaluation::where('institution_id', $institution->id)->pluck('id');
     $viaSubjectIds = Evaluation::whereHas(
         'subject', fn($q) => $q->where('institution_id', $institution->id)
     )->pluck('id');
     $allIds = $directIds->merge($viaSubjectIds)->unique()->values();
- 
+
     $evaluation = Evaluation::whereIn('id', $allIds)
         ->findOrFail($request->evaluation_id);
- 
+
     $saved = $skipped = 0;
     $hasRecordedBy = \Illuminate\Support\Facades\Schema::hasColumn('grades', 'recorded_by');
- 
+
     DB::transaction(function () use (
         $request, $evaluation, $institution, &$saved, &$skipped, $hasRecordedBy
     ) {
         foreach ($request->grades as $apprenantId => $score) {
             if ($score === null || $score === '') { $skipped++; continue; }
- 
+
             $apprenant = Apprenant::where('id', $apprenantId)
                 ->where('institution_id', $institution->id)->first();
             if (! $apprenant) { $skipped++; continue; }
- 
+
             $data = ['score' => min(max(0, (float) $score), (float) $evaluation->max_score)];
             if ($hasRecordedBy) $data['recorded_by'] = \Illuminate\Support\Facades\Auth::id();
- 
+
             Grade::updateOrCreate(
                 ['evaluation_id' => $evaluation->id, 'apprenant_id' => (int) $apprenantId],
                 $data
@@ -3487,7 +3487,7 @@ class StaffDashboardController extends Controller
             $saved++;
         }
     });
- 
+
     return redirect()
         ->route('staff.bulletins', ['evaluation_id' => $evaluation->id])
         ->with('success', "{$saved} note(s) enregistrée(s), {$skipped} ignorée(s).");
@@ -3497,23 +3497,23 @@ class StaffDashboardController extends Controller
     public function gradeUpdate(Request $request, Grade $grade)
 {
     $institution = $this->getInstitution();
- 
+
     $directIds     = Evaluation::where('institution_id', $institution->id)->pluck('id');
     $viaSubjectIds = Evaluation::whereHas(
         'subject', fn($q) => $q->where('institution_id', $institution->id)
     )->pluck('id');
- 
+
     $evaluation = Evaluation::whereIn(
         'id', $directIds->merge($viaSubjectIds)->unique()
     )->where('id', $grade->evaluation_id)->firstOrFail();
- 
+
     $request->validate(['score' => 'required|numeric|min:0']);
- 
+
     $data = ['score' => min((float) $request->score, (float) $evaluation->max_score)];
     if (\Illuminate\Support\Facades\Schema::hasColumn('grades', 'recorded_by')) {
         $data['recorded_by'] = \Illuminate\Support\Facades\Auth::id();
     }
- 
+
     $grade->update($data);
     return redirect()->back()->with('success', 'Note mise à jour.');
 }
@@ -3521,16 +3521,16 @@ class StaffDashboardController extends Controller
     public function gradeDestroy(Grade $grade)
 {
     $institution = $this->getInstitution();
- 
+
     $directIds     = Evaluation::where('institution_id', $institution->id)->pluck('id');
     $viaSubjectIds = Evaluation::whereHas(
         'subject', fn($q) => $q->where('institution_id', $institution->id)
     )->pluck('id');
- 
+
     Evaluation::whereIn(
         'id', $directIds->merge($viaSubjectIds)->unique()
     )->where('id', $grade->evaluation_id)->firstOrFail();
- 
+
     $grade->delete();
     return redirect()->back()->with('success', 'Note supprimée.');
 }
