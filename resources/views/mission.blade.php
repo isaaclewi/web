@@ -440,7 +440,7 @@ footer{background:var(--ink);padding:5rem 4rem 2.5rem}
       <span class="quote-mark">"</span>
       <p class="quote-text">L'éducation n'est pas seulement ce qui se passe entre les quatre murs d'une salle de classe. C'est un écosystème où chaque acteur — parent, enseignant, directeur, élève — doit pouvoir communiquer et agir en temps réel.</p>
       <div class="quote-author">
-        <div class="qa-av"><img src="/medias/Syntriforg[1].png" alt="SyntriForge"></div>
+        <div class="qa-av"><img src="/medias/Syntriforg[1].png" alt="SyntriForge" onerror="this.style.display='none';this.parentElement.innerHTML='🎓'"></div>
         <div>
           <div class="qa-name">Équipe SyntriForg Edu</div>
           <div class="qa-role">Fondateurs de la plateforme</div>
@@ -470,7 +470,7 @@ footer{background:var(--ink);padding:5rem 4rem 2.5rem}
 <footer>
   <div class="footer-top">
     <div>
-      <div class="fb-logo"><div class="fb-logo-mark"><img src="/medias/Syntriforg[1].png" alt="SyntriForge"></div><div class="fb-logo-text">SyntriForge <span>Edu</span></div></div>
+      <div class="fb-logo"><div class="fb-logo-mark"><img src="/medias/Syntriforg[1].png" alt="SyntriForge" onerror="this.style.display='none';this.parentElement.innerHTML='🎓'"></div><div class="fb-logo-text">SyntriForge <span>Edu</span></div></div>
       <p class="fb-desc">La plateforme tout-en-un pour gérer vos établissements scolaires avec efficacité et innovation.</p>
       <div class="socials"><a href="#" class="soc">𝕏</a><a href="#" class="soc">in</a><a href="#" class="soc">f</a></div>
     </div>

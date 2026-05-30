@@ -253,7 +253,7 @@ body.hov #cd{transform:translate(-50%,-50%) scale(0)}
   <!-- ── PANNEAU GAUCHE ── -->
   <div class="panel-left">
     <div class="pl-logo">
-      <div class="pl-logo-mark">SF</div>
+      <div class="pl-logo-mark"><img src="/medias/Syntriforg[1].png" alt="SyntriForge" onerror="this.style.display='none';this.parentElement.innerHTML='🎓'"></div>
       <div class="pl-logo-text">SyntriForge <span>Edu</span></div>
     </div>
 
@@ -357,7 +357,7 @@ body.hov #cd{transform:translate(-50%,-50%) scale(0)}
         <button type="submit" class="btn-submit">Se connecter →</button>
       </form>
 
-      
+
       <p class="pr-copyright">© 2026 SyntriForge Edu. Tous droits réservés.</p>
 
     </div>
