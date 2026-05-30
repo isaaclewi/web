@@ -87,10 +87,11 @@ class LibraryBook extends Model
        ACCESSORS
     ──────────────────────────────────────────── */
 
-    public function getCoverUrlAttribute(): string
+public function getCoverUrlAttribute(): string
 {
     if ($this->cover_path) {
-        return Storage::disk('root_storage')->url($this->cover_path);
+        return 'https://xuyqlouytujiqhoqavcz.storage.supabase.co/storage/v1/object/public/syntriforg/'
+            . ltrim($this->cover_path, '/');
     }
     return asset('images/book-placeholder.png');
 }
@@ -98,7 +99,8 @@ class LibraryBook extends Model
 public function getFileUrlAttribute(): string
 {
     if ($this->file_path) {
-        return Storage::disk('root_storage')->url($this->file_path);
+        return 'https://xuyqlouytujiqhoqavcz.storage.supabase.co/storage/v1/object/public/syntriforg/'
+            . ltrim($this->file_path, '/');
     }
     return '#';
 }
