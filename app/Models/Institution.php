@@ -64,4 +64,14 @@ class Institution extends Model
     {
         return $this->hasMany(Niveau::class);
     }
+
+    // Dans Institution.php
+public function getLogoUrlAttribute(): string
+{
+    if ($this->logo) {
+        return 'https://xuyqlouytujiqhoqavcz.storage.supabase.co/storage/v1/object/public/syntriforg/'
+            . ltrim($this->logo, '/');
+    }
+    return asset('images/institution-placeholder.png');
+}
 }
