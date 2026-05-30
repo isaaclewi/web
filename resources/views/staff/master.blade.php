@@ -454,7 +454,7 @@
     <div class="sb-logo">
         <div class="sb-icon">
             @if($sI?->logo)
-                <img src="{{ asset('storage/'.$sI->logo) }}" style="width:38px;height:38px;object-fit:cover;border-radius:10px" alt="">
+                <img src="{{ $institution->logo_url }}" style="width:38px;height:38px;object-fit:cover;border-radius:10px" alt="">
             @else
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/></svg>
             @endif

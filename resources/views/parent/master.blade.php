@@ -915,7 +915,7 @@
         <div class="p-logo">
             <div class="p-logo-mark">
                 @if (isset($institution) && $institution?->logo)
-                    <img src="{{ asset('storage/' . $institution->logo) }}" alt=""
+                    <img src="{{ $institution->logo_url }}" alt=""
                         style="width:36px;height:36px;object-fit:cover;border-radius:8px;">
                 @else
                     <svg style="width:18px;height:18px;" fill="none" stroke="white" viewBox="0 0 24 24">
@@ -1064,7 +1064,7 @@
                 </button>
             </form>
         </div>
-        
+
     </aside>
 
     {{-- HEADER --}}

@@ -1352,7 +1352,7 @@
         <div class="sidebar-logo">
             <div class="logo-mark">
                 @if (isset($institution) && $institution?->logo)
-                    <img src="{{ asset('storage/' . $institution->logo) }}" alt=""
+                    <img src="{{ $institution->logo_url }}" alt=""
                         style="width:34px;height:34px;object-fit:cover;">
                 @else
                     <svg style="width:16px;height:16px;" fill="none" stroke="white" viewBox="0 0 24 24">

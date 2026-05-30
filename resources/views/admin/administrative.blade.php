@@ -945,7 +945,7 @@
                                     <label>Logo actuel</label>
                                     <div
                                         style="width:100px;height:100px;border-radius:12px;overflow:hidden;border:1.5px solid var(--line)">
-                                        <img src="{{ asset('storage/' . $institution->logo) }}" alt="Logo actuel"
+                                        <img src="{{ $institution->logo_url }}" alt="Logo actuel"
                                             style="width:100%;height:100%;object-fit:cover">
                                     </div>
                                 </div>
