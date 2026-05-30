@@ -86,6 +86,94 @@
 
     /* ── PRINT ── */
     #invoice-print-area { display: none; }
+
+    /* ── FORMATS D'IMPRESSION ── */
+@media print {
+    body * { visibility: hidden !important; }
+    #invoice-print-area, #invoice-print-area * { visibility: visible !important; }
+    #invoice-print-area {
+        display: block !important;
+        position: fixed;
+        inset: 0;
+        background: white;
+        z-index: 9999;
+        padding: 0;
+    }
+}
+
+/* Format ticket 80mm */
+@media print and (max-width: 80mm) {
+    .invoice-wrap, .inv-wrap {
+        padding: 6mm 4mm !important;
+        max-width: 80mm !important;
+    }
+    .invoice-header, .inv-hd {
+        flex-direction: column !important;
+        gap: 4px !important;
+        border-bottom-width: 1px !important;
+        padding-bottom: 6px !important;
+        margin-bottom: 8px !important;
+    }
+    .invoice-meta, .inv-meta { text-align: left !important; }
+    .invoice-title, .inv-title { font-size: 16px !important; }
+    .invoice-school-name, .inv-school-name { font-size: 13px !important; }
+    .invoice-parties, .inv-parties {
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+        margin-bottom: 10px !important;
+    }
+    .invoice-party-box, .inv-party {
+        padding: 6px 8px !important;
+        border-radius: 4px !important;
+    }
+    .invoice-party-name, .inv-party-name { font-size: 12px !important; }
+    .invoice-party-detail, .inv-party-det { font-size: 10px !important; }
+    .invoice-table, .inv-tbl { font-size: 10px !important; margin-bottom: 8px !important; }
+    .invoice-table thead th, .inv-tbl thead th { padding: 4px 6px !important; }
+    .invoice-table tbody td, .inv-tbl tbody td { padding: 5px 6px !important; }
+    .invoice-totals, .inv-totals { width: 100% !important; margin-bottom: 10px !important; }
+    .invoice-total-row, .inv-total-row { font-size: 11px !important; padding: 3px 0 !important; }
+    .invoice-total-row:last-child, .inv-total-row:last-child { font-size: 13px !important; }
+    .invoice-status-banner, .inv-banner {
+        font-size: 11px !important;
+        padding: 6px !important;
+        margin-bottom: 10px !important;
+    }
+    .invoice-footer, .inv-footer {
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding-top: 8px !important;
+    }
+    .invoice-footer-note, .inv-footer-note {
+        font-size: 9px !important;
+        max-width: 100% !important;
+    }
+    .invoice-watermark-paid, .inv-watermark { display: none !important; }
+    .invoice-num, .inv-num { font-size: 10px !important; }
+    .invoice-signature-line, .inv-sig-line { width: 100% !important; }
+}
+
+/* Format ticket 58mm */
+@media print and (max-width: 58mm) {
+    .invoice-wrap, .inv-wrap {
+        padding: 4mm 3mm !important;
+        max-width: 58mm !important;
+    }
+    .invoice-school-name, .inv-school-name { font-size: 11px !important; }
+    .invoice-school-sub, .inv-school-sub { display: none !important; }
+    .invoice-title, .inv-title { font-size: 14px !important; }
+    .invoice-party-detail, .inv-party-det { display: none !important; }
+    .invoice-table thead, .inv-tbl thead { display: none !important; }
+    .invoice-table tbody td, .inv-tbl tbody td {
+        display: block !important;
+        padding: 2px 4px !important;
+        font-size: 10px !important;
+        border: none !important;
+    }
+    .invoice-table tbody td:last-child { font-size: 12px !important; font-weight: 700 !important; }
+    .invoice-footer .invoice-signature-block,
+    .inv-footer .inv-sig-block { display: none !important; }
+}
     @media print {
         body * { visibility: hidden !important; }
         #invoice-print-area, #invoice-print-area * { visibility: visible !important; }
@@ -791,24 +879,19 @@ function storeForPrint() {
 
 // ── Imprimer un enregistrement existant directement ──
 function printExistingRecord(ref, du, paye, reste, mode, date, moisLabel) {
-    const data = {
-        ref, du, paye, reste, mode, date, moisLabel,
-        appName:   APPRENANT.name,
-        matricule: APPRENANT.matricule,
-        classe:    APPRENANT.classe,
-        annee:     APPRENANT.annee,
-        institution: '{{ $institution->name }}',
-        emetteur:    '{{ Auth::user()->name }}',
-    };
+    const data = { ref, du, paye, reste, mode, date, moisLabel,
+        appName: APPRENANT.name, matricule: APPRENANT.matricule,
+        classe: APPRENANT.classe, annee: APPRENANT.annee };
     buildInvoiceDom(data);
-    window.print();
+    choosePrintFormat(); // ← remplace window.print()
 }
+
 
 // ── Imprimer depuis le bouton succès ──
 function printLastInvoice() {
     try {
         const data = JSON.parse(localStorage.getItem('lastInvoice') || '{}');
-        if (data && data.ref) { buildInvoiceDom(data); window.print(); }
+        if (data && data.ref) { buildInvoiceDom(data); choosePrintFormat(); }
         else alert('Aucun reçu disponible.');
     } catch(e) { alert('Erreur lors de la récupération du reçu.'); }
 }
@@ -853,9 +936,85 @@ window.addEventListener('load', function () {
         if (data && data.printAfter) {
             data.printAfter = false;
             localStorage.setItem('lastInvoice', JSON.stringify(data));
-            setTimeout(() => { buildInvoiceDom(data); window.print(); }, 700);
+            setTimeout(() => { buildInvoiceDom(data); choosePrintFormat(); }, 700);
         }
     } catch(e) {}
 });
+
+function choosePrintFormat() {
+    let saved = 'a4';
+    try { saved = localStorage.getItem('printFormat') || 'a4'; } catch(e) {}
+
+    const formats = [
+        { key:'a4',  label:'A4',         size:'210 × 297 mm', sub:'Laser / Jet d\'encre',  pageSize:'A4' },
+        { key:'t80', label:'Ticket 80mm', size:'80mm × auto',  sub:'Imprimante thermique', pageSize:'80mm 297mm' },
+        { key:'t58', label:'Ticket 58mm', size:'58mm × auto',  sub:'Petite thermique USB', pageSize:'58mm 297mm' },
+    ];
+
+    const overlay = document.createElement('div');
+    overlay.setAttribute('data-print-dialog', '');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;';
+
+    const cards = formats.map(f => `
+        <div data-fmt="${f.key}"
+             onclick="window._selectFmt('${f.key}',this)"
+             style="background:#fff;border:${saved===f.key?'2px solid #2563eb':'1.5px solid #e5e7eb'};border-radius:12px;padding:1rem;cursor:pointer;min-width:130px;text-align:center;transition:border .15s;flex:1;">
+            <div style="font-size:24px;margin-bottom:6px">${f.key==='a4'?'📄':'🧾'}</div>
+            <div style="font-size:13px;font-weight:700;color:#111827">${f.label}</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px">${f.size}</div>
+            <div style="font-size:10px;color:#9ca3af">${f.sub}</div>
+            ${saved===f.key?'<div style="margin-top:6px;font-size:10px;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:9999px;display:inline-block">Dernier utilisé</div>':''}
+        </div>`).join('');
+
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:1.5rem;max-width:500px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.2);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+                <span style="font-size:15px;font-weight:700;color:#111827">Format d'impression</span>
+                <button onclick="document.querySelector('[data-print-dialog]').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
+            </div>
+            <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;">${cards}</div>
+            <div style="display:flex;justify-content:flex-end;gap:.75rem;">
+                <button onclick="document.querySelector('[data-print-dialog]').remove()" style="padding:.5rem 1rem;border:1px solid #e5e7eb;border-radius:8px;background:#fff;font-size:.82rem;font-weight:500;cursor:pointer;font-family:inherit;">Annuler</button>
+                <button onclick="window._confirmPrint()" style="padding:.5rem 1.25rem;border:none;border-radius:8px;background:#111827;color:#fff;font-size:.82rem;font-weight:500;cursor:pointer;font-family:inherit;">Imprimer</button>
+            </div>
+        </div>`;
+
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    window._selectedFormat = saved;
+
+    window._selectFmt = function(fmt, el) {
+        document.querySelectorAll('[data-fmt]').forEach(c => {
+            c.style.border = '1.5px solid #e5e7eb';
+            const b = c.querySelector('[style*="dbeafe"]');
+            if (b) b.remove();
+        });
+        el.style.border = '2px solid #2563eb';
+        const badge = document.createElement('div');
+        badge.style.cssText = 'margin-top:6px;font-size:10px;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:9999px;display:inline-block';
+        badge.textContent = 'Sélectionné';
+        el.appendChild(badge);
+        window._selectedFormat = fmt;
+    };
+
+    window._confirmPrint = function() {
+        const fmt = window._selectedFormat || 'a4';
+        try { localStorage.setItem('printFormat', fmt); } catch(e) {}
+        document.querySelector('[data-print-dialog]')?.remove();
+        _applyPageFormat(fmt);
+        setTimeout(() => {
+            window.print();
+            setTimeout(() => _applyPageFormat('a4'), 1500);
+        }, 120);
+    };
+}
+
+function _applyPageFormat(fmt) {
+    let el = document.getElementById('_pageStyle');
+    if (!el) { el = document.createElement('style'); el.id = '_pageStyle'; document.head.appendChild(el); }
+    const sizes = { a4:'@page{size:A4 portrait;margin:10mm}', t80:'@page{size:80mm auto;margin:3mm}', t58:'@page{size:58mm auto;margin:2mm}' };
+    el.textContent = sizes[fmt] || sizes.a4;
+}
 </script>
 @endpush
