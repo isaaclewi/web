@@ -85,12 +85,15 @@
     .timeline-dot { width:.5rem; height:.5rem; border-radius:50%; display:inline-block; flex-shrink:0; margin-top:.3rem; }
 
     /* ── PRINT ── */
-    #invoice-print-area { display: none; }
+/* ══════════════════════════════════════════
+   IMPRESSION — BASE
+══════════════════════════════════════════ */
+#invoice-print-area { display: none; }
 
-    /* ── FORMATS D'IMPRESSION ── */
 @media print {
     body * { visibility: hidden !important; }
-    #invoice-print-area, #invoice-print-area * { visibility: visible !important; }
+    #invoice-print-area,
+    #invoice-print-area * { visibility: visible !important; }
     #invoice-print-area {
         display: block !important;
         position: fixed;
@@ -98,81 +101,345 @@
         background: white;
         z-index: 9999;
         padding: 0;
+        overflow: hidden;
     }
-}
 
-/* Format ticket 80mm */
-@media print and (max-width: 80mm) {
-    .invoice-wrap, .inv-wrap {
-        padding: 6mm 4mm !important;
-        max-width: 80mm !important;
-    }
-    .invoice-header, .inv-hd {
-        flex-direction: column !important;
-        gap: 4px !important;
-        border-bottom-width: 1px !important;
-        padding-bottom: 6px !important;
-        margin-bottom: 8px !important;
-    }
-    .invoice-meta, .inv-meta { text-align: left !important; }
-    .invoice-title, .inv-title { font-size: 16px !important; }
-    .invoice-school-name, .inv-school-name { font-size: 13px !important; }
-    .invoice-parties, .inv-parties {
-        grid-template-columns: 1fr !important;
-        gap: 6px !important;
-        margin-bottom: 10px !important;
-    }
-    .invoice-party-box, .inv-party {
-        padding: 6px 8px !important;
-        border-radius: 4px !important;
-    }
-    .invoice-party-name, .inv-party-name { font-size: 12px !important; }
-    .invoice-party-detail, .inv-party-det { font-size: 10px !important; }
-    .invoice-table, .inv-tbl { font-size: 10px !important; margin-bottom: 8px !important; }
-    .invoice-table thead th, .inv-tbl thead th { padding: 4px 6px !important; }
-    .invoice-table tbody td, .inv-tbl tbody td { padding: 5px 6px !important; }
-    .invoice-totals, .inv-totals { width: 100% !important; margin-bottom: 10px !important; }
-    .invoice-total-row, .inv-total-row { font-size: 11px !important; padding: 3px 0 !important; }
-    .invoice-total-row:last-child, .inv-total-row:last-child { font-size: 13px !important; }
-    .invoice-status-banner, .inv-banner {
-        font-size: 11px !important;
-        padding: 6px !important;
-        margin-bottom: 10px !important;
-    }
-    .invoice-footer, .inv-footer {
-        flex-direction: column !important;
-        gap: 8px !important;
-        padding-top: 8px !important;
-    }
-    .invoice-footer-note, .inv-footer-note {
-        font-size: 9px !important;
+    /* Conteneur principal — toujours 100% de la page */
+    .invoice-wrap,
+    .inv-wrap {
+        width: 100% !important;
         max-width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        word-break: break-word !important;
+        padding: 10mm !important;
     }
-    .invoice-watermark-paid, .inv-watermark { display: none !important; }
-    .invoice-num, .inv-num { font-size: 10px !important; }
-    .invoice-signature-line, .inv-sig-line { width: 100% !important; }
+
+    /* Tableaux : ne jamais dépasser la largeur */
+    .invoice-table,
+    .inv-tbl {
+        width: 100% !important;
+        table-layout: fixed !important;
+        word-break: break-word !important;
+    }
+    .invoice-table td,
+    .invoice-table th,
+    .inv-tbl td,
+    .inv-tbl th {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+
+    /* Totaux : pleine largeur sur toutes tailles */
+    .invoice-totals,
+    .inv-totals {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Filigrane masqué par défaut sur ticket */
+    .invoice-watermark-paid,
+    .inv-watermark {
+        display: none !important;
+    }
 }
 
-/* Format ticket 58mm */
-@media print and (max-width: 58mm) {
-    .invoice-wrap, .inv-wrap {
-        padding: 4mm 3mm !important;
-        max-width: 58mm !important;
-    }
-    .invoice-school-name, .inv-school-name { font-size: 11px !important; }
-    .invoice-school-sub, .inv-school-sub { display: none !important; }
-    .invoice-title, .inv-title { font-size: 14px !important; }
-    .invoice-party-detail, .inv-party-det { display: none !important; }
-    .invoice-table thead, .inv-tbl thead { display: none !important; }
-    .invoice-table tbody td, .inv-tbl tbody td {
+/* ══════════════════════════════════════════
+   FORMAT A4 — filigrane visible
+══════════════════════════════════════════ */
+@media print and (min-width: 81mm) {
+    .invoice-watermark-paid,
+    .inv-watermark {
         display: block !important;
-        padding: 2px 4px !important;
-        font-size: 10px !important;
-        border: none !important;
     }
-    .invoice-table tbody td:last-child { font-size: 12px !important; font-weight: 700 !important; }
+    .invoice-wrap,
+    .inv-wrap {
+        max-width: 720px !important;
+        margin: 0 auto !important;
+        padding: 10mm 15mm !important;
+    }
+}
+
+/* ══════════════════════════════════════════
+   FORMAT TICKET 80mm
+══════════════════════════════════════════ */
+@media print and (max-width: 80mm) {
+
+    .invoice-wrap,
+    .inv-wrap {
+        padding: 4mm 3mm !important;
+        font-size: 9pt !important;
+    }
+
+    /* En-tête : empilé verticalement */
+    .invoice-header,
+    .inv-hd {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 3px !important;
+        border-bottom-width: 1px !important;
+        padding-bottom: 5px !important;
+        margin-bottom: 6px !important;
+    }
+    .invoice-meta,
+    .inv-meta {
+        text-align: left !important;
+        width: 100% !important;
+    }
+    .invoice-title,
+    .inv-title {
+        font-size: 14pt !important;
+        letter-spacing: 0 !important;
+    }
+    .invoice-school-name,
+    .inv-school-name {
+        font-size: 10pt !important;
+        letter-spacing: 0 !important;
+    }
+    .invoice-school-sub,
+    .inv-school-sub {
+        font-size: 7pt !important;
+        line-height: 1.3 !important;
+    }
+    .invoice-num,
+    .inv-num {
+        font-size: 8pt !important;
+        padding: 1px 4px !important;
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .invoice-date,
+    .inv-date {
+        font-size: 7pt !important;
+    }
+
+    /* Logo masqué pour gagner de la place */
+    .invoice-logo-block img,
+    .inv-hd img {
+        max-height: 20px !important;
+        object-fit: contain !important;
+    }
+
+    /* Parties : colonne unique */
+    .invoice-parties,
+    .inv-parties {
+        display: block !important;
+        margin-bottom: 6px !important;
+    }
+    .invoice-party-box,
+    .inv-party {
+        padding: 4px 5px !important;
+        border-radius: 3px !important;
+        margin-bottom: 4px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .invoice-party-label,
+    .inv-party-lbl {
+        font-size: 6pt !important;
+        margin-bottom: 3px !important;
+    }
+    .invoice-party-name,
+    .inv-party-name {
+        font-size: 9pt !important;
+        margin-bottom: 1px !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    .invoice-party-detail,
+    .inv-party-det {
+        font-size: 7pt !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Tableau des lignes */
+    .invoice-table,
+    .inv-tbl {
+        font-size: 8pt !important;
+        margin-bottom: 5px !important;
+    }
+    .invoice-table thead th,
+    .inv-tbl thead th {
+        padding: 3px 4px !important;
+        font-size: 6pt !important;
+    }
+    .invoice-table tbody td,
+    .inv-tbl tbody td {
+        padding: 3px 4px !important;
+        font-size: 8pt !important;
+    }
+
+    /* Totaux */
+    .invoice-totals,
+    .inv-totals {
+        margin-bottom: 6px !important;
+    }
+    .invoice-total-row,
+    .inv-total-row {
+        font-size: 8pt !important;
+        padding: 2px 0 !important;
+    }
+    .invoice-total-row:last-child,
+    .inv-total-row:last-child {
+        font-size: 10pt !important;
+        padding-top: 4px !important;
+    }
+
+    /* Bannière statut */
+    .invoice-status-banner,
+    .inv-banner {
+        font-size: 8pt !important;
+        padding: 4px 5px !important;
+        margin-bottom: 6px !important;
+        border-radius: 4px !important;
+        border-width: 1px !important;
+    }
+
+    /* Pied de page */
+    .invoice-footer,
+    .inv-footer {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 5px !important;
+        padding-top: 5px !important;
+    }
+    .invoice-footer-note,
+    .inv-footer-note {
+        font-size: 7pt !important;
+        max-width: 100% !important;
+        line-height: 1.3 !important;
+    }
+    .invoice-signature-block,
+    .inv-sig-block {
+        width: 100% !important;
+    }
+    .invoice-signature-line,
+    .inv-sig-line {
+        width: 100% !important;
+        margin-bottom: 3px !important;
+    }
+    .invoice-signature-label,
+    .inv-sig-lbl {
+        font-size: 6pt !important;
+    }
+    .invoice-signature-name,
+    .inv-sig-name {
+        font-size: 8pt !important;
+    }
+}
+
+/* ══════════════════════════════════════════
+   FORMAT TICKET 58mm
+══════════════════════════════════════════ */
+@media print and (max-width: 58mm) {
+
+    .invoice-wrap,
+    .inv-wrap {
+        padding: 3mm 2mm !important;
+        font-size: 8pt !important;
+    }
+
+    /* En-tête ultra-compact */
+    .invoice-school-name,
+    .inv-school-name {
+        font-size: 9pt !important;
+    }
+    .invoice-school-sub,
+    .inv-school-sub {
+        display: none !important;
+    }
+    .invoice-title,
+    .inv-title {
+        font-size: 13pt !important;
+    }
+    .invoice-num,
+    .inv-num {
+        font-size: 7pt !important;
+    }
+
+    /* Logo très compact */
+    .invoice-logo-block img,
+    .inv-hd img {
+        max-height: 16px !important;
+    }
+
+    /* Parties encore plus compactes */
+    .invoice-party-box,
+    .inv-party {
+        padding: 3px 4px !important;
+        margin-bottom: 3px !important;
+    }
+    .invoice-party-detail,
+    .inv-party-det {
+        font-size: 6.5pt !important;
+    }
+    .invoice-party-name,
+    .inv-party-name {
+        font-size: 8pt !important;
+    }
+
+    /* Tableau : masquer l'entête, afficher en blocs */
+    .invoice-table thead,
+    .inv-tbl thead {
+        display: none !important;
+    }
+    .invoice-table tbody tr,
+    .inv-tbl tbody tr {
+        display: block !important;
+        border-bottom: 1px dashed #ccc !important;
+        padding-bottom: 3px !important;
+        margin-bottom: 3px !important;
+    }
+    .invoice-table tbody td,
+    .inv-tbl tbody td {
+        display: block !important;
+        padding: 1px 3px !important;
+        font-size: 7pt !important;
+        border: none !important;
+        text-align: left !important;
+    }
+    .invoice-table tbody td:last-child,
+    .inv-tbl tbody td:last-child {
+        font-size: 10pt !important;
+        font-weight: 700 !important;
+        text-align: left !important;
+    }
+
+    /* Totaux très serrés */
+    .invoice-total-row,
+    .inv-total-row {
+        font-size: 7.5pt !important;
+        padding: 1.5px 0 !important;
+    }
+    .invoice-total-row:last-child,
+    .inv-total-row:last-child {
+        font-size: 9.5pt !important;
+    }
+
+    /* Bannière */
+    .invoice-status-banner,
+    .inv-banner {
+        font-size: 7pt !important;
+        padding: 3px 4px !important;
+        letter-spacing: 0 !important;
+    }
+
+    /* Pied : supprimer signature pour gagner de l'espace */
     .invoice-footer .invoice-signature-block,
-    .inv-footer .inv-sig-block { display: none !important; }
+    .inv-footer .inv-sig-block {
+        display: none !important;
+    }
+    .invoice-footer-note,
+    .inv-footer-note {
+        font-size: 6.5pt !important;
+    }
 }
     @media print {
         body * { visibility: hidden !important; }
