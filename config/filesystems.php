@@ -45,8 +45,8 @@ return [
             'endpoint'                => env('SUPABASE_ENDPOINT'),
             'url'                     => 'https://xuyqlouytujiqhoqavcz.storage.supabase.co/storage/v1/object/public/syntriforg',
             'use_path_style_endpoint' => true,
-            'throw'                   => false,
-            'report'                  => false,
+            'throw'                   => true,
+            'report'                  => true,
         ],
 
     ],
