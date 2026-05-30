@@ -1190,14 +1190,13 @@
 @push('scripts')
 <script>
 // ══════════════════════════════════════════════
-// DONNÉES GLOBALES (injectées depuis PHP)
+// DONNÉES GLOBALES
 // ══════════════════════════════════════════════
 const MOIS_LABELS = @json($moisLabels);
 const ANNEE       = '{{ $annee }}';
 const INSTITUTION = '{{ addslashes($institution->name) }}';
 const EMETTEUR    = '{{ addslashes(Auth::user()->name) }}';
 
-// État courant du modal paiement
 let payCtx = {};
 
 // ══════════════════════════════════════════════
@@ -1218,34 +1217,29 @@ function generateRef() {
 // MODAL PAIEMENT
 // ══════════════════════════════════════════════
 function openPay() {
-    // Sans contexte : afficher les sélects
     showPaySelects(true);
-    document.getElementById('pay_ap_hidden').value = '';
+    document.getElementById('pay_ap_hidden').value   = '';
     document.getElementById('pay_mois_hidden').value = '';
-    document.getElementById('pay-title').textContent = 'Enregistrer un paiement';
+    document.getElementById('pay-title').textContent  = 'Enregistrer un paiement';
     resetPayForm();
     openModal('modal-pay');
 }
 
 function openPayFor(appId, appName, matricule, classe) {
-    // Avec contexte apprenant : masquer le sélect apprenant, garder mois visible
     payCtx = { appId, appName, matricule, classe };
-    document.getElementById('pay_ap_hidden').value = appId;
+    document.getElementById('pay_ap_hidden').value  = appId;
     document.getElementById('pay-title').textContent = `Paiement — ${appName}`;
 
-    // Masquer select apprenant, garder select mois
-    document.getElementById('pay_ap_wrap').style.display  = 'none';
+    document.getElementById('pay_ap_wrap').style.display   = 'none';
     document.getElementById('pay_mois_wrap').style.display = '';
 
-    // Synchro mois → hidden
     const selMois = document.getElementById('pay_mois_sel');
     document.getElementById('pay_mois_hidden').value = selMois.value;
-    selMois.onchange = function() {
+    selMois.onchange = function () {
         document.getElementById('pay_mois_hidden').value = this.value;
         const opt = this.options[this.selectedIndex];
         payCtx.moisLabel = opt.dataset.label || opt.textContent.trim();
     };
-    // Init moisLabel
     if (selMois.value) {
         const opt = selMois.options[selMois.selectedIndex];
         payCtx.moisLabel = opt.dataset.label || opt.textContent.trim();
@@ -1263,7 +1257,7 @@ function showPaySelects(show) {
         const selAp   = document.getElementById('pay_ap_sel');
         const selMois = document.getElementById('pay_mois_sel');
 
-        selAp.onchange = function() {
+        selAp.onchange = function () {
             document.getElementById('pay_ap_hidden').value = this.value;
             const opt = this.options[this.selectedIndex];
             payCtx.appId     = this.value;
@@ -1271,7 +1265,7 @@ function showPaySelects(show) {
             payCtx.matricule = opt.dataset.matricule || '';
             payCtx.classe    = opt.dataset.classe    || '';
         };
-        selMois.onchange = function() {
+        selMois.onchange = function () {
             document.getElementById('pay_mois_hidden').value = this.value;
             const opt = this.options[this.selectedIndex];
             payCtx.mois      = this.value;
@@ -1281,10 +1275,10 @@ function showPaySelects(show) {
 }
 
 function resetPayForm() {
-    document.getElementById('pay_du').value    = '';
-    document.getElementById('pay_paye').value  = '';
-    document.getElementById('pay_mode').value  = '';
-    document.getElementById('pay_date').value  = new Date().toISOString().split('T')[0];
+    document.getElementById('pay_du').value   = '';
+    document.getElementById('pay_paye').value = '';
+    document.getElementById('pay_mode').value = '';
+    document.getElementById('pay_date').value = new Date().toISOString().split('T')[0];
     generateRef();
     updateReste();
 }
@@ -1304,11 +1298,10 @@ function updateReste() {
     elR.style.color = reste > 0 ? 'var(--err)' : 'var(--ok)';
 
     if (paye >= du && du > 0) { elS.textContent = '✓ Soldé';   elS.style.color = 'var(--ok)'; }
-    else if (paye > 0)         { elS.textContent = '~ Partiel'; elS.style.color = 'var(--warn)'; }
-    else                       { elS.textContent = '✗ Impayé';  elS.style.color = 'var(--err)'; }
+    else if (paye > 0)        { elS.textContent = '~ Partiel'; elS.style.color = 'var(--warn)'; }
+    else                      { elS.textContent = '✗ Impayé';  elS.style.color = 'var(--err)'; }
 }
 
-// Stocker les données avant soumission (pour impression après rechargement)
 function storeForPrint() {
     const moisSel = document.getElementById('pay_mois_sel');
     let moisLabel = payCtx.moisLabel || '';
@@ -1318,46 +1311,49 @@ function storeForPrint() {
     }
 
     const data = {
-        ref:       document.getElementById('pay_ref').value,
-        du:        parseFloat(document.getElementById('pay_du').value)   || 0,
-        paye:      parseFloat(document.getElementById('pay_paye').value) || 0,
-        reste:     Math.max(0, (parseFloat(document.getElementById('pay_du').value)||0) - (parseFloat(document.getElementById('pay_paye').value)||0)),
-        mode:      document.getElementById('pay_mode').value,
-        date:      document.getElementById('pay_date').value,
-        moisLabel: moisLabel || 'Mois',
-        appName:   payCtx.appName   || '',
-        matricule: payCtx.matricule  || '',
-        classe:    payCtx.classe     || '',
-        annee:     ANNEE,
+        ref:        document.getElementById('pay_ref').value,
+        du:         parseFloat(document.getElementById('pay_du').value)   || 0,
+        paye:       parseFloat(document.getElementById('pay_paye').value) || 0,
+        reste:      Math.max(0, (parseFloat(document.getElementById('pay_du').value) || 0)
+                               - (parseFloat(document.getElementById('pay_paye').value) || 0)),
+        mode:       document.getElementById('pay_mode').value,
+        date:       document.getElementById('pay_date').value,
+        moisLabel:  moisLabel || 'Mois',
+        appName:    payCtx.appName   || '',
+        matricule:  payCtx.matricule || '',
+        classe:     payCtx.classe    || '',
+        annee:      ANNEE,
         printAfter: true,
     };
-    try { localStorage.setItem('lastInvoice', JSON.stringify(data)); } catch(e) {}
+    try { localStorage.setItem('lastInvoice', JSON.stringify(data)); } catch (e) {}
 }
 
 // ══════════════════════════════════════════════
 // DRAWER — DOSSIER APPRENANT
 // ══════════════════════════════════════════════
 function openDossier(appId, appName, matricule, classe, niveau, filiere, du, paye, reste, records) {
-    const overlay = document.getElementById('dossierOverlay');
+    const overlay  = document.getElementById('dossierOverlay');
     document.getElementById('drawerTitle').textContent = `Dossier — ${appName}`;
 
-    const initials = appName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    const pct = du > 0 ? Math.min(100, Math.round(paye / du * 100)) : 0;
+    const initials  = appName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const pct       = du > 0 ? Math.min(100, Math.round(paye / du * 100)) : 0;
     const statutClass = pct >= 100 ? 'bdg-g' : pct > 0 ? 'bdg-a' : 'bdg-r';
-    const statutLabel = pct >= 100 ? 'Soldé' : pct > 0 ? 'Partiel' : 'Impayé';
-
+    const statutLabel = pct >= 100 ? 'Soldé'  : pct > 0 ? 'Partiel' : 'Impayé';
     const fmt = n => (n || 0).toLocaleString('fr-FR') + ' FCFA';
 
-    // Construire les lignes de mois
     let moisHTML = '';
     for (const [mNum, mLabel] of Object.entries(MOIS_LABELS)) {
         const r = records[mNum];
         if (r) {
             const mpct  = r.montant_du > 0 ? Math.min(100, Math.round(r.montant_paye / r.montant_du * 100)) : 0;
             const mcls  = r.statut === 'paye' ? 'ok' : r.statut === 'partiel' ? 'warn' : 'err';
-            const mmode = { especes:'Espèces', virement:'Virement', mobile_money:'Mobile Money', cheque:'Chèque', autre:'Autre', '':'—' }[r.mode_paiement || ''] || r.mode_paiement || '—';
+            const mmode = { especes:'Espèces', virement:'Virement', mobile_money:'Mobile Money',
+                            cheque:'Chèque', autre:'Autre', '':'—' }[r.mode_paiement || ''] || r.mode_paiement || '—';
             moisHTML += `
-            <div class="mois-item ${r.statut}" onclick="openPayForMois(${appId},'${appName.replace(/'/g,"\\'")}','${matricule.replace(/'/g,"\\'")}','${classe.replace(/'/g,"\\'")}',${mNum},'${mLabel}',${r.montant_du},${r.montant_paye},'${r.mode_paiement||''}','${(r.reference||'').replace(/'/g,"\\'")}')">
+            <div class="mois-item ${r.statut}"
+                 onclick="openPayForMois(${appId},'${appName.replace(/'/g,"\\'")}','${matricule.replace(/'/g,"\\'")}',
+                    '${classe.replace(/'/g,"\\'")}',${mNum},'${mLabel}',${r.montant_du},${r.montant_paye},
+                    '${r.mode_paiement||''}','${(r.reference||'').replace(/'/g,"\\'")}')">
                 <div class="mois-item-lbl">${mLabel}</div>
                 <div class="mois-item-bar"><div class="mois-item-fill ${mcls}" style="width:${mpct}%"></div></div>
                 <div class="mois-item-info">
@@ -1367,12 +1363,12 @@ function openDossier(appId, appName, matricule, classe, niveau, filiere, du, pay
             </div>`;
         } else {
             moisHTML += `
-            <div class="mois-item vide" onclick="openPayForMois(${appId},'${appName.replace(/'/g,"\\'")}','${matricule.replace(/'/g,"\\'")}','${classe.replace(/'/g,"\\'")}',${mNum},'${mLabel}')">
+            <div class="mois-item vide"
+                 onclick="openPayForMois(${appId},'${appName.replace(/'/g,"\\'")}','${matricule.replace(/'/g,"\\'")}',
+                    '${classe.replace(/'/g,"\\'")}',${mNum},'${mLabel}')">
                 <div class="mois-item-lbl">${mLabel}</div>
                 <div class="mois-item-bar"></div>
-                <div class="mois-item-info">
-                    <span class="mois-item-add">+ Ajouter</span>
-                </div>
+                <div class="mois-item-info"><span class="mois-item-add">+ Ajouter</span></div>
             </div>`;
         }
     }
@@ -1384,9 +1380,9 @@ function openDossier(appId, appName, matricule, classe, niveau, filiere, du, pay
                 <div class="ap-name">${appName}</div>
                 <div class="ap-sub">${matricule}</div>
                 <div class="ap-badges">
-                    ${classe    ? `<span class="ap-badge">${classe}</span>`    : ''}
-                    ${niveau    ? `<span class="ap-badge" style="background:#dcfce7;color:#15803d">${niveau}</span>`    : ''}
-                    ${filiere   ? `<span class="ap-badge" style="background:#fef3c7;color:#b45309">${filiere}</span>`   : ''}
+                    ${classe  ? `<span class="ap-badge">${classe}</span>` : ''}
+                    ${niveau  ? `<span class="ap-badge" style="background:#dcfce7;color:#15803d">${niveau}</span>` : ''}
+                    ${filiere ? `<span class="ap-badge" style="background:#fef3c7;color:#b45309">${filiere}</span>` : ''}
                     <span class="bdg ${statutClass}" style="font-size:.68rem;">${statutLabel}</span>
                 </div>
             </div>
@@ -1409,7 +1405,8 @@ function openDossier(appId, appName, matricule, classe, niveau, filiere, du, pay
                 </div>
             </div>
             <div class="prog-wrap" style="height:8px;margin-top:.25rem;">
-                <div class="prog-bar ${pct >= 100 ? 'prog-ok' : pct >= 50 ? 'prog-warn' : 'prog-err'}" style="width:${pct}%"></div>
+                <div class="prog-bar ${pct >= 100 ? 'prog-ok' : pct >= 50 ? 'prog-warn' : 'prog-err'}"
+                     style="width:${pct}%"></div>
             </div>
         </div>
 
@@ -1420,8 +1417,11 @@ function openDossier(appId, appName, matricule, classe, niveau, filiere, du, pay
 
         <div style="margin-top:1rem;">
             <button class="btn btn-gold" style="width:100%;justify-content:center;"
-                    onclick="closeDossier();openPayFor(${appId},'${appName.replace(/'/g,"\\'")}','${matricule.replace(/'/g,"\\'")}','${classe.replace(/'/g,"\\'")}')">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    onclick="closeDossier();openPayFor(${appId},'${appName.replace(/'/g,"\\'")}',
+                        '${matricule.replace(/'/g,"\\'")}','${classe.replace(/'/g,"\\'")}')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:13px;height:13px">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
                 Saisir un nouveau paiement
             </button>
         </div>
@@ -1436,21 +1436,20 @@ function closeDossier() {
     document.body.style.overflow = '';
 }
 
-// Ouvrir le modal paiement pré-rempli depuis le drawer (mois spécifique)
 function openPayForMois(appId, appName, matricule, classe, moisNum, moisLabel, du, paye, mode, ref) {
     closeDossier();
     payCtx = { appId, appName, matricule, classe, moisLabel };
 
     document.getElementById('pay_ap_hidden').value   = appId;
     document.getElementById('pay_mois_hidden').value = moisNum;
-    document.getElementById('pay-title').textContent = `Paiement — ${appName} · ${moisLabel}`;
+    document.getElementById('pay-title').textContent  = `Paiement — ${appName} · ${moisLabel}`;
     document.getElementById('pay_ap_wrap').style.display   = 'none';
     document.getElementById('pay_mois_wrap').style.display = 'none';
 
-    document.getElementById('pay_du').value    = du    || '';
-    document.getElementById('pay_paye').value  = paye  || '';
-    document.getElementById('pay_mode').value  = mode  || '';
-    document.getElementById('pay_date').value  = new Date().toISOString().split('T')[0];
+    document.getElementById('pay_du').value   = du   || '';
+    document.getElementById('pay_paye').value = paye || '';
+    document.getElementById('pay_mode').value = mode || '';
+    document.getElementById('pay_date').value = new Date().toISOString().split('T')[0];
 
     if (ref && ref !== '') {
         document.getElementById('pay_ref').value = ref;
@@ -1468,7 +1467,7 @@ function openPayForMois(appId, appName, matricule, classe, moisNum, moisLabel, d
 function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.style.overflow = 'hidden'; }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
 
-document.getElementById('modal-pay').addEventListener('click', function(e) {
+document.getElementById('modal-pay').addEventListener('click', function (e) {
     if (e.target === this) closePay();
 });
 document.addEventListener('keydown', e => {
@@ -1476,24 +1475,25 @@ document.addEventListener('keydown', e => {
 });
 
 // ══════════════════════════════════════════════
-// FACTURE — CONSTRUCTION DOM + IMPRESSION
+// FACTURE — CONSTRUCTION DOM
 // ══════════════════════════════════════════════
 function buildInvoice(d) {
-    const fmt = n => (n || 0).toLocaleString('fr-FR') + ' FCFA';
-    const modeMap = { especes:'Espèces', virement:'Virement bancaire', mobile_money:'Mobile Money', cheque:'Chèque', autre:'Autre', '':'—' };
-    const statut  = d.paye >= d.du && d.du > 0 ? 'Soldé' : d.paye > 0 ? 'Partiel' : 'Impayé';
+    const fmt     = n => (n || 0).toLocaleString('fr-FR') + ' FCFA';
+    const modeMap = { especes:'Espèces', virement:'Virement bancaire', mobile_money:'Mobile Money',
+                      cheque:'Chèque', autre:'Autre', '':'—' };
+    const statut    = d.paye >= d.du && d.du > 0 ? 'Soldé' : d.paye > 0 ? 'Partiel' : 'Impayé';
     const bannerCls = statut === 'Soldé' ? 'paid' : statut === 'Partiel' ? 'partial' : 'unpaid';
-    const bannerMsg = statut === 'Soldé' ? '✓ PAIEMENT COMPLET — SOLDÉ'
+    const bannerMsg = statut === 'Soldé'   ? '✓ PAIEMENT COMPLET — SOLDÉ'
                     : statut === 'Partiel' ? '⚠ PAIEMENT PARTIEL — RESTE À PAYER'
-                    : '✗ AUCUN PAIEMENT ENREGISTRÉ';
+                    :                        '✗ AUCUN PAIEMENT ENREGISTRÉ';
 
-    document.getElementById('inv-num').textContent   = d.ref || '—';
-    document.getElementById('inv-date').textContent  = d.date
-        ? new Date(d.date).toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'}) : '—';
+    document.getElementById('inv-num').textContent       = d.ref || '—';
+    document.getElementById('inv-date').textContent      = d.date
+        ? new Date(d.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }) : '—';
     document.getElementById('inv-ap-name').textContent   = d.appName   || '—';
-    document.getElementById('inv-matricule').textContent = d.matricule  || '—';
-    document.getElementById('inv-classe').textContent    = d.classe     || '—';
-    document.getElementById('inv-mois').textContent      = d.moisLabel  || '—';
+    document.getElementById('inv-matricule').textContent = d.matricule || '—';
+    document.getElementById('inv-classe').textContent    = d.classe    || '—';
+    document.getElementById('inv-mois').textContent      = d.moisLabel || '—';
     document.getElementById('inv-mode').textContent      = modeMap[d.mode] || d.mode || '—';
     document.getElementById('inv-paye').textContent      = fmt(d.paye);
     document.getElementById('inv-du').textContent        = fmt(d.du);
@@ -1511,23 +1511,17 @@ function buildInvoice(d) {
     wm.textContent = statut === 'Soldé' ? 'PAYÉ' : '';
 }
 
-function printLastInvoice() {
-    try {
-        const d = JSON.parse(localStorage.getItem('lastInvoice') || '{}');
-        if (d && d.ref) { buildInvoice(d); choosePrintFormat(); }
-        else alert('Aucun reçu disponible. Veuillez d\'abord enregistrer un paiement.');
-    } catch(e) { alert('Impossible de récupérer le reçu.'); }
-}
-
-
+// ══════════════════════════════════════════════
+// IMPRESSION — CHOIX FORMAT
+// ══════════════════════════════════════════════
 function choosePrintFormat() {
     let saved = 'a4';
-    try { saved = localStorage.getItem('printFormat') || 'a4'; } catch(e) {}
+    try { saved = localStorage.getItem('printFormat') || 'a4'; } catch (e) {}
 
     const formats = [
-        { key:'a4',  label:'A4',         size:'210 × 297 mm', sub:'Laser / Jet d\'encre',  pageSize:'A4' },
-        { key:'t80', label:'Ticket 80mm', size:'80mm × auto',  sub:'Imprimante thermique', pageSize:'80mm 297mm' },
-        { key:'t58', label:'Ticket 58mm', size:'58mm × auto',  sub:'Petite thermique USB', pageSize:'58mm 297mm' },
+        { key:'a4',  label:'A4',          size:'210 × 297 mm', sub:'Laser / Jet d\'encre' },
+        { key:'t80', label:'Ticket 80mm', size:'80mm × auto',  sub:'Imprimante thermique' },
+        { key:'t58', label:'Ticket 58mm', size:'58mm × auto',  sub:'Petite thermique USB' },
     ];
 
     const overlay = document.createElement('div');
@@ -1537,24 +1531,27 @@ function choosePrintFormat() {
     const cards = formats.map(f => `
         <div data-fmt="${f.key}"
              onclick="window._selectFmt('${f.key}',this)"
-             style="background:#fff;border:${saved===f.key?'2px solid #2563eb':'1.5px solid #e5e7eb'};border-radius:12px;padding:1rem;cursor:pointer;min-width:130px;text-align:center;transition:border .15s;flex:1;">
-            <div style="font-size:24px;margin-bottom:6px">${f.key==='a4'?'📄':'🧾'}</div>
+             style="background:#fff;border:${saved === f.key ? '2px solid #2563eb' : '1.5px solid #e5e7eb'};border-radius:12px;padding:1rem;cursor:pointer;min-width:130px;text-align:center;transition:border .15s;flex:1;">
+            <div style="font-size:24px;margin-bottom:6px">${f.key === 'a4' ? '📄' : '🧾'}</div>
             <div style="font-size:13px;font-weight:700;color:#111827">${f.label}</div>
             <div style="font-size:11px;color:#6b7280;margin-top:2px">${f.size}</div>
             <div style="font-size:10px;color:#9ca3af">${f.sub}</div>
-            ${saved===f.key?'<div style="margin-top:6px;font-size:10px;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:9999px;display:inline-block">Dernier utilisé</div>':''}
+            ${saved === f.key ? '<div style="margin-top:6px;font-size:10px;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:9999px;display:inline-block">Dernier utilisé</div>' : ''}
         </div>`).join('');
 
     overlay.innerHTML = `
         <div style="background:#fff;border-radius:16px;padding:1.5rem;max-width:500px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.2);">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
                 <span style="font-size:15px;font-weight:700;color:#111827">Format d'impression</span>
-                <button onclick="document.querySelector('[data-print-dialog]').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
+                <button onclick="document.querySelector('[data-print-dialog]').remove()"
+                        style="border:none;background:none;font-size:20px;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
             </div>
             <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;">${cards}</div>
             <div style="display:flex;justify-content:flex-end;gap:.75rem;">
-                <button onclick="document.querySelector('[data-print-dialog]').remove()" style="padding:.5rem 1rem;border:1px solid #e5e7eb;border-radius:8px;background:#fff;font-size:.82rem;font-weight:500;cursor:pointer;font-family:inherit;">Annuler</button>
-                <button onclick="window._confirmPrint()" style="padding:.5rem 1.25rem;border:none;border-radius:8px;background:#111827;color:#fff;font-size:.82rem;font-weight:500;cursor:pointer;font-family:inherit;">Imprimer</button>
+                <button onclick="document.querySelector('[data-print-dialog]').remove()"
+                        style="padding:.5rem 1rem;border:1px solid #e5e7eb;border-radius:8px;background:#fff;font-size:.82rem;font-weight:500;cursor:pointer;font-family:inherit;">Annuler</button>
+                <button onclick="window._confirmPrint()"
+                        style="padding:.5rem 1.25rem;border:none;border-radius:8px;background:#111827;color:#fff;font-size:.82rem;font-weight:500;cursor:pointer;font-family:inherit;">Imprimer</button>
             </div>
         </div>`;
 
@@ -1563,7 +1560,7 @@ function choosePrintFormat() {
 
     window._selectedFormat = saved;
 
-    window._selectFmt = function(fmt, el) {
+    window._selectFmt = function (fmt, el) {
         document.querySelectorAll('[data-fmt]').forEach(c => {
             c.style.border = '1.5px solid #e5e7eb';
             const b = c.querySelector('[style*="dbeafe"]');
@@ -1577,9 +1574,9 @@ function choosePrintFormat() {
         window._selectedFormat = fmt;
     };
 
-    window._confirmPrint = function() {
+    window._confirmPrint = function () {
         const fmt = window._selectedFormat || 'a4';
-        try { localStorage.setItem('printFormat', fmt); } catch(e) {}
+        try { localStorage.setItem('printFormat', fmt); } catch (e) {}
         document.querySelector('[data-print-dialog]')?.remove();
         _applyPageFormat(fmt);
         setTimeout(() => {
@@ -1596,29 +1593,21 @@ function _applyPageFormat(fmt) {
     el.textContent = sizes[fmt] || sizes.a4;
 }
 
-FinancialApprenant.blade.php (admin) — dans @push('scripts')
-Remplace les fonctions printExistingRecord, printLastInvoice et le window.addEventListener('load') :
-javascript// ── Imprimer un enregistrement existant directement ──
-function printExistingRecord(ref, du, paye, reste, mode, date, moisLabel) {
-    const data = { ref, du, paye, reste, mode, date, moisLabel,
-        appName: APPRENANT.name, matricule: APPRENANT.matricule,
-        classe: APPRENANT.classe, annee: APPRENANT.annee };
-    buildInvoiceDom(data);
-    choosePrintFormat(); // ← remplace window.print()
-}
-
-// ── Imprimer depuis le bouton succès ──
+// ══════════════════════════════════════════════
+// IMPRESSION DEPUIS LE BOUTON SUCCÈS
+// ══════════════════════════════════════════════
 function printLastInvoice() {
     try {
         const data = JSON.parse(localStorage.getItem('lastInvoice') || '{}');
-        if (data && data.ref) { buildInvoiceDom(data); choosePrintFormat(); }
-        else alert('Aucun reçu disponible.');
-    } catch(e) { alert('Erreur lors de la récupération du reçu.'); }
+        if (data && data.ref) { buildInvoice(data); choosePrintFormat(); }
+        else alert('Aucun reçu disponible. Veuillez d\'abord enregistrer un paiement.');
+    } catch (e) { alert('Impossible de récupérer le reçu.'); }
 }
+
 // ══════════════════════════════════════════════
 // IMPRESSION AUTO APRÈS RECHARGEMENT
 // ══════════════════════════════════════════════
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
     try {
         const d = JSON.parse(localStorage.getItem('lastInvoice') || '{}');
         if (d && d.printAfter) {
@@ -1626,21 +1615,18 @@ window.addEventListener('load', function() {
             localStorage.setItem('lastInvoice', JSON.stringify(d));
             setTimeout(() => { buildInvoice(d); choosePrintFormat(); }, 700);
         }
-    } catch(e) {}
+    } catch (e) {}
 });
-
-
 
 // ══════════════════════════════════════════════
 // RECHERCHE EN TEMPS RÉEL (debounce 400ms)
 // ══════════════════════════════════════════════
-(function() {
+(function () {
     const input = document.getElementById('searchInput');
     const form  = document.getElementById('searchForm');
     if (!input || !form) return;
-
     let timer;
-    input.addEventListener('input', function() {
+    input.addEventListener('input', function () {
         clearTimeout(timer);
         timer = setTimeout(() => form.submit(), 400);
     });
