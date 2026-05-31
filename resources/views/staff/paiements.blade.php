@@ -1113,7 +1113,7 @@
         <div class="inv-hd">
             <div>
                 @if($institution->logo)
-                    <img src="{{ Storage::url($institution->logo) }}" alt="Logo" style="height:44px;object-fit:contain;display:block;margin-bottom:8px;">
+                    <img src="{{ $institution->logo_url }}" alt="Logo" style="height:44px;object-fit:contain;display:block;margin-bottom:8px;">
                 @endif
                 <div class="inv-school-name">{{ $institution->name }}</div>
                 <div class="inv-school-sub">

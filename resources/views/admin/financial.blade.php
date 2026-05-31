@@ -1163,7 +1163,7 @@
         <div class="invoice-header">
             <div class="invoice-logo-block">
                 @if($institution->logo)
-                <img src="{{ Storage::url($institution->logo) }}" alt="Logo" style="height:48px;object-fit:contain;margin-bottom:8px;display:block;">
+                <img src="{{ $institution->logo_url }}" alt="Logo" style="height:48px;object-fit:contain;margin-bottom:8px;display:block;">
                 @endif
                 <h1 class="invoice-school-name">{{ $institution->name }}</h1>
                 <p class="invoice-school-sub">
